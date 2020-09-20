@@ -19,6 +19,8 @@ app.use(bodyParser.json());
 // Initialize the routes
 app.use('/api/user', require('./routes/user_api'));
 app.use('/api/group', require('./routes/group_api'));
+app.use('/api/event', require('./routes/event_api'));
+app.use('/api/order', require('./routes/order_api'));
 
 // Error handling middleware
 app.use(function(err, req, res, next) {

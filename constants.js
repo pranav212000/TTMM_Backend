@@ -11,7 +11,25 @@ var constants = {
     updateTime: 'updateTime',
     createdTime: 'createdTime',
     groupMembers: 'groupMembers',
-    groupEvents: 'groupEvents'
+    groupEvents: 'groupEvents',
+
+
+    eventId: 'eventId',
+    eventName: 'eventName',
+    orders: 'orders',
+    finalOrder: 'finalOrder',
+
+
+    orderId: 'orderId',
+    itemName: 'itemName',
+    quantity: 'quantity',
+    cost: 'cost',
+    totalCost: 'totalCost',
+
+    transactionId: 'transactionId',
+    toGive: 'toGive',
+    toGet: 'toGet'
+
 
 };
 
