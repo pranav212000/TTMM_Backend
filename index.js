@@ -26,6 +26,9 @@ app.use('/api/group', require('./routes/group_api'));
 app.use('/api/event', require('./routes/event_api'));
 app.use('/api/order', require('./routes/order_api').router);
 
+app.get('/', function (req, res) {
+    res.send('APP IS RUNNING');
+});
 // Error handling middleware
 app.use(function (err, req, res, next) {
     // console.log(err);
