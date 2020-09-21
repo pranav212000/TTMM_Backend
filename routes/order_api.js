@@ -7,32 +7,39 @@ const { itemName, eventId, orderId } = require('../constants');
 const e = require('express');
 const router = express.Router();
 
-
-
+var getOrder = function (orderId) {
+    return new Promise(function (resolve, reject) {
+        Order.findOne({ [constants.orderId]: orderId }, function (error, order) {
+            if (error) {
+                console.log(error);
+                reject(error);
+            } else {
+                resolve(order);
+            }
+        });
+    });
+}
 
 
 router.get('/:orderId', function (req, res, next) {
 
-    Order.findOne({ [constants.orderId]: req.params.orderId }, function (error, order) {
-        if (error) {
-            console.error(error);
+    getOrder(req.params.orderId, function (orderResult) {
+        if (orderResult.status === 'error') {
             res.status(500).send({
                 'isSuccess': false,
-                result: error,
-
+                result: orderResult.error,
             });
         } else {
-            if (order === null) {
+            if (orderResult.result === null) {
                 res.status(404).send({
                     message: 'Could not find order with orderid' + req.params.orderId,
                 })
             }
             else
-                res.send(order);
+                res.send(orderResult.result);
         }
-    })
-
-})
+    });
+});
 
 
 
@@ -48,4 +55,7 @@ router.put('/editOrder/:orderId', function (req, res, next) {
         });
 
 });
-module.exports = router;
+module.exports = {
+    router: router,
+    getOrder: getOrder
+};

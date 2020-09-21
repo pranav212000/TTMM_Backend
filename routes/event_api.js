@@ -4,6 +4,7 @@ const constants = require('../constants');
 const User = require('../models/user');
 const { model } = require('mongoose');
 const Group = require('../models/group');
+const getOrder = require('./order_api').getOrder;
 
 const router = express.Router();
 
@@ -75,9 +76,6 @@ router.post('/:eventId/addOrder', function (req, res, next) {
         }
         else {
             Order.create(req.body).then(function (order) {
-                // Add order to orders array in event
-                // addToFinalOrder(order, req.params.eventId, res);
-
                 addOrderToEvent(order, req.params.eventId, res);
             }).catch(next);
         }
@@ -111,6 +109,50 @@ function addOrderToEvent(order, eventId, res) {
         }
     )
 }
+
+
+
+router.get('/:eventId/orders', function (req, res, next) {
+    Event.findOne({ [constants.eventId]: req.params.eventId }, function (error, event) {
+        if (error) {
+            console.error(error);
+            res.status(500).send({
+                'isSuccess': false,
+                result: error
+            });
+        } else {
+            if (event === null)
+                res.status(404).send({
+                    message: 'Coud not find the event with event id : ' + req.params.eventId
+                });
+            else {
+                var orders = event[constants.orders];
+
+                Promise.all(orders.map(getOrder))
+                    .then(response => {
+                        res.send(response);
+                    })
+                    .catch(error => {
+                        res.send(error);
+                    });
+            }
+        }
+    });
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 module.exports = router;
