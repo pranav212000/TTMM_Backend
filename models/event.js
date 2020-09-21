@@ -11,16 +11,16 @@ EventSchema = new Schema({
     [constants.eventName]: { type: String, required: [true, 'Event name not specified'] },
     [constants.transactionId]: { type: String, default: uuid.v1() },
     [constants.orders]: { type: [String], default: [] },
-    [constants.finalOrder]: {
-        type: [{
-            [constants.itemName]: String,
-            [constants.quantity]: Number,
-            [constants.cost]: Number,
-            [constants.totalCost]: Number
+    // [constants.finalOrder]: {
+    //     type: [{
+    //         [constants.itemName]: String,
+    //         [constants.quantity]: Number,
+    //         [constants.cost]: Number,
+    //         [constants.totalCost]: Number
 
-        }],
-        default: []
-    }
+    //     }],
+    //     default: []
+    // }
 
 
 });

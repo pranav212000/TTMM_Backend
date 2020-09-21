@@ -37,8 +37,80 @@ router.get('/:eventId', function (req, res, next) {
 
 
 
-router.post('/')
+// Add new order also check if exists and update if already exists!
+router.post('/:eventId/addOrder', function (req, res, next) {
 
+    Order.findOne({
+        [constants.uid]: req.body[constants.uid],
+        [constants.eventId]: req.body[constants.eventId],
+        [constants.itemName]: req.body[constants.itemName]
+    }).countDocuments().then(function (cnt) {
+        if (cnt !== 0) {
+            Order.findOneAndUpdate(
+                {
+                    [constants.uid]: req.body[constants.uid],
+                    [constants.eventId]: req.body[constants.eventId],
+                    [constants.itemName]: req.body[constants.itemName]
+                },
+                {
+                    $inc: {
+                        [constants.quantity]: req.body[constants.quantity],
+                        [constants.totalCost]: req.body[constants.totalCost]
+                    },
+                },
+                { new: true },
+                function (error, order) {
+                    if (error)
+                        console.log(error);
+                    else {
+                        console.log("Order Updated");
+                        console.log(order);
+                        res.send(order);
+                        // console.log('SUCCESS');
+                        // console.log(order);
+                        // addToFinalOrder(order, req.params.eventId, res);
+                    }
+                }
+            );
+        }
+        else {
+            Order.create(req.body).then(function (order) {
+                // Add order to orders array in event
+                // addToFinalOrder(order, req.params.eventId, res);
+
+                addOrderToEvent(order, req.params.eventId, res);
+            }).catch(next);
+        }
+    }).catch(next);
+});
+
+function addOrderToEvent(order, eventId, res) {
+    Event.findOneAndUpdate(
+        { [constants.eventId]: eventId },
+        { $push: { [constants.orders]: order[constants.orderId] } },
+        { new: true },
+        function (error, event) {
+            if (error) {
+                console.error(error);
+                res.status(500).send({
+                    message: 'Failed: to add order to event',
+                    isSuccess: false,
+                    result: error
+                })
+            } else {
+                console.log("Order add to event");
+                console.log({
+                    'event': event,
+                    'order': order
+                });
+                res.send({
+                    'order': order,
+                    'event': event
+                });
+            }
+        }
+    )
+}
 
 
 module.exports = router;

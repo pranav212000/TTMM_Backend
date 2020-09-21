@@ -1,7 +1,9 @@
 const express = require('express');
 const User = require('../models/user');
 const Group = require('../models/group');
+const Order = require('../models/order');
 const constants = require('../constants');
+const { uid } = require('../constants');
 const router = express.Router();
 
 
@@ -33,7 +35,12 @@ router.get('/checkUser/:uid', function (req, res, next) {
 });
 
 
-
+// Get user groups
+router.get('/:uid/orders', function (req, res, next) {
+    Order.find({ [constants.uid]: req.params.uid }).then(function (orders) {
+        res.send(orders); 
+    }).catch(next);
+});
 
 
 
