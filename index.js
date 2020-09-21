@@ -7,6 +7,9 @@ const bodyParser = require('body-parser');
 // Set up express app
 const app = express();
 
+app.set('view engine', 'ejs');
+
+
 // TODO check one before upload
 // Connect to mongoDB local host
 // mongoose.connect('mongodb://localhost/ttmm', { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, useFindAndModify: false });
@@ -19,6 +22,7 @@ mongoose.Promise = global.Promise;
 // Use body parser
 app.use(bodyParser.json());
 
+app.use(express.static('./public'));
 
 // Initialize the routes
 app.use('/api/user', require('./routes/user_api'));
@@ -27,7 +31,7 @@ app.use('/api/event', require('./routes/event_api'));
 app.use('/api/order', require('./routes/order_api').router);
 
 app.get('/', function (req, res) {
-    res.send('APP IS RUNNING');
+    res.render('home');
 });
 // Error handling middleware
 app.use(function (err, req, res, next) {
