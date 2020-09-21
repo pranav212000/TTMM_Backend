@@ -7,8 +7,12 @@ const bodyParser = require('body-parser');
 // Set up express app
 const app = express();
 
-// Connect to mongoDb
-mongoose.connect('mongodb://localhost/ttmm', { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, useFindAndModify: false });
+// TODO check one before upload
+// Connect to mongoDB local host
+// mongoose.connect('mongodb://localhost/ttmm', { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, useFindAndModify: false });
+// Connect to mongoDB atlas
+mongoose.connect('mongodb+srv://dbUser:cAfoxVXZNqiXKdID@cluster0.fdsc5.mongodb.net/ttmmdb?retryWrites=true&w=majority', { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, useFindAndModify: false });
+
 
 mongoose.Promise = global.Promise;
 
