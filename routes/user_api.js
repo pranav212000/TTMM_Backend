@@ -16,8 +16,8 @@ router.post('/addUser', function (req, res, next) {
 
 
 // Get user data
-router.get('/:uid', function (req, res, next) {
-    User.findOne({ [constants.uid]: req.params.uid }).then(function (user) {
+router.get('/', function (req, res, next) {
+    User.findOne({ [constants.uid]: req.query.uid }).then(function (user) {
         if (user != null)
             res.send(user);
         else
@@ -44,6 +44,37 @@ router.get('/:uid/orders', function (req, res, next) {
         res.send(orders);
     }).catch(next);
 });
+
+
+var checkUser = function (phoneNumber) {
+    return new Promise(function (resolve, reject) {
+        User.findOne({ [constants.phoneNumber]: phoneNumber }, function (error, user) {
+            if (error) {
+                console.log(error);
+                reject(error);
+            } else {
+                if (user === null)
+                    resolve({ [phoneNumber]: false });
+                else
+                    resolve({ [phoneNumber]: true });
+            }
+        });
+    });
+}
+
+
+router.get('/syncContacts', function (req, res, next) {
+
+    var contacts = req.body.contacts;
+    
+    Promise.all(contacts.map(checkUser))
+        .then(response => {
+            res.send(response);
+        })
+        .catch(error => res.send(error));
+
+});
+
 
 
 
