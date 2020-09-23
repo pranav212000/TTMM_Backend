@@ -142,17 +142,4 @@ router.get('/:eventId/orders', function (req, res, next) {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 module.exports = router;
