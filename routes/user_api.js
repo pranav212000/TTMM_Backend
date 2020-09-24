@@ -17,7 +17,7 @@ router.post('/addUser', function (req, res, next) {
 
 // Get user data
 router.get('/', function (req, res, next) {
-    User.findOne({ [constants.uid]: req.query.uid }).then(function (user) {
+    User.findOne({ [constants.phoneNumber]: req.query.phoneNumber }).then(function (user) {
         if (user != null)
             res.send(user);
         else
@@ -66,7 +66,7 @@ var checkUser = function (phoneNumber) {
 router.get('/syncContacts', function (req, res, next) {
 
     var contacts = req.body.contacts;
-    
+
     Promise.all(contacts.map(checkUser))
         .then(response => {
             res.send(response);
