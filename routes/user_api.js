@@ -38,6 +38,31 @@ router.get('/checkUser/:uid', function (req, res, next) {
 });
 
 
+var getUser = function (phoneNumber) {
+    return new Promise(function (resolve, reject) {
+        User.findOne({ [constants.phoneNumbes]: phoneNumber }, function (error, user) {
+            if (error) {
+                console.log(error);
+                reject(error);
+            } else {
+                if (user === null)
+                    resolve({ message: 'User NOT FOUND!' });
+                else
+                    resolve(user);
+            }
+        })
+    })
+}
+
+router.get('multiple', function (req, res, next) {
+    var phoneNumbers = req.body.phoneNumbers;
+    Promise.all(phoneNumbers.map(getUser))
+        .then(users => res.send(users))
+        .catch(error => res.send(error));
+
+})
+
+
 // Get user groups
 router.get('/:uid/orders', function (req, res, next) {
     Order.find({ [constants.uid]: req.params.uid }).then(function (orders) {
