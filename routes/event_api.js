@@ -4,15 +4,16 @@ const constants = require('../constants');
 const User = require('../models/user');
 const { model } = require('mongoose');
 const Group = require('../models/group');
+const { eventId } = require('../constants');
 const getOrder = require('./order_api').getOrder;
 
 const router = express.Router();
 
 
-router.post('/:groupId/addEvent', function (req, res, next) {
+router.post('/addEvent', function (req, res, next) {
     Event.create(req.body).then(function (event) {
         Group.findOneAndUpdate(
-            { [constants.groupId]: req.params.groupId },
+            { [constants.groupId]: req.query.groupId },
             { $push: { [constants.groupEvents]: event[constants.eventId] } },
             { new: true },
             function (error, success) {
@@ -30,12 +31,39 @@ router.post('/:groupId/addEvent', function (req, res, next) {
     }).catch(next);
 });
 
-router.get('/:eventId', function (req, res, next) {
-    Event.findOne({ [constants.eventId]: req.params.eventId }).then(function (event) {
+router.get('/', function (req, res, next) {
+    Event.findOne({ [constants.eventId]: req.query.eventId }).then(function (event) {
         res.send(event);
     }).catch(next);
 });
 
+
+
+var getEvent = function (eventId) {
+    return new Promise(function (resolve, reject) {
+        Event.findOne({ [constants.eventId]: eventId }, function (error, event) {
+            if (error) {
+                console.log(error);
+                reject(error);
+            } else {
+                if (event === null)
+                    resolve({ message: 'Event NOT FOUND!' });
+                else
+                    resolve(event);
+            }
+        })
+    })
+}
+
+
+router.get('/multiple', function (req, res, next) {
+    var eventIds = req.body.eventIds;
+
+
+    Promise.all(eventIds.map(getEvent))
+        .then(events => res.send(events))
+        .catch(error => res.send(error));
+})
 
 
 // Add new order also check if exists and update if already exists!
