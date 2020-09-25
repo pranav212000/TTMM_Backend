@@ -54,7 +54,7 @@ var getUser = function (phoneNumber) {
     })
 }
 
-router.get('multiple', function (req, res, next) {
+router.get('/multiple', function (req, res, next) {
     var phoneNumbers = req.body.phoneNumbers;
     Promise.all(phoneNumbers.map(getUser))
         .then(users => res.send(users))
