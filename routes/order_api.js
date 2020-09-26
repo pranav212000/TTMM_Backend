@@ -55,6 +55,11 @@ router.put('/editOrder/:orderId', function (req, res, next) {
         });
 
 });
+
+
+// TODO handle transaction on addition of order
+
+
 module.exports = {
     router: router,
     getOrder: getOrder

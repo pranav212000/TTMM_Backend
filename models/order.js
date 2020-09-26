@@ -6,13 +6,13 @@ Schema = mongoose.Schema;
 
 OrderSchema = new Schema({
 
-    [constants.orderId]: {type: String, required: [true, 'Order id not specified']},
-    [constants.eventId]: {type: String, required: [true, 'Event Id is required']},
-    [constants.uid] : {type: String, required: [true, 'User Id not specified']},
-    [constants.itemName]: {type: String, required: [true, 'Item name not specified']},
-    [constants.quantity]: {type: Number, required: [true, 'Quantity not specified']},
-    [constants.cost]: {type: Number, required:[ true, 'Cost is not specified']},
-    [constants.totalCost]: {type: Number}
+    [constants.orderId]: { type: String, required: [true, 'Order id not specified'] },
+    [constants.eventId]: { type: String, required: [true, 'Event Id is required'] },
+    [constants.phoneNumber]: { type: [String], required: [true, 'Phone Number not specified'] },
+    [constants.itemName]: { type: String, required: [true, 'Item name not specified'] },
+    [constants.quantity]: { type: Number, required: [true, 'Quantity not specified'] },
+    [constants.cost]: { type: Number, required: [true, 'Cost is not specified'] },
+    [constants.totalCost]: { type: Number }
 
 
 
