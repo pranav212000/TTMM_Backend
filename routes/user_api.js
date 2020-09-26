@@ -17,6 +17,7 @@ router.post('/addUser', function (req, res, next) {
 
 // Get user data
 router.get('/', function (req, res, next) {
+    console.log(req.query.phoneNumber);
     User.findOne({ [constants.phoneNumber]: req.query.phoneNumber }).then(function (user) {
         if (user != null)
             res.send(user);
@@ -40,7 +41,7 @@ router.get('/checkUser/:uid', function (req, res, next) {
 
 var getUser = function (phoneNumber) {
     return new Promise(function (resolve, reject) {
-        User.findOne({ [constants.phoneNumbes]: phoneNumber }, function (error, user) {
+        User.findOne({ [constants.phoneNumber]: phoneNumber }, function (error, user) {
             if (error) {
                 console.log(error);
                 reject(error);
