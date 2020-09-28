@@ -7,6 +7,8 @@ const router = express.Router();
 
 
 router.post('/addGroup', function (req, res, next) {
+    if (req.body[constants.groupIconUrl] === null || req.body[constants.groupIconUrl] === "")
+        req.body[constants.groupIconUrl] = "https://firebasestorage.googleapis.com/v0/b/ttmm-d9b4f.appspot.com/o/placeholders%2Fgroup_placeholder.png?alt=media&token=e0d875be-8f8f-4ae5-840b-855c549e30ec";
     Group.create(req.body).then(function (group) {
         var phoneNumbers = req.body[constants.groupMembers];
         if (phoneNumbers.length !== 0) {

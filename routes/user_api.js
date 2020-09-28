@@ -8,6 +8,8 @@ const router = express.Router();
 
 
 router.post('/addUser', function (req, res, next) {
+    if(req.body[constants.profileUrl] === null || req.body[constants.profileUrl] === "")
+        req.body[constants.profileUrl] = "https://firebasestorage.googleapis.com/v0/b/ttmm-d9b4f.appspot.com/o/placeholders%2Fprofile_placeholder.jpg?alt=media&token=1cd39587-5053-47ee-a575-5aede7eddc9b";
     User.create(req.body).then(function (user) {
         console.log("User added");
         res.send(user);
