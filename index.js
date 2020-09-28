@@ -14,6 +14,17 @@ app.set('view engine', 'ejs');
 // Connect to mongoDB local host
 // mongoose.connect('mongodb://localhost/ttmm', { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, useFindAndModify: false });
 // Connect to mongoDB atlas
+
+
+// Public bulao jisko
+// Delete karna hai karao
+// Mere saath shart lagaao
+// Yeh yeh yeh karke dikhao (DELETE KARKE DIKHAO)
+// Yeh phir yeh
+// Ab yeh yeh ye karke dikhao
+// Yeh karke dikhao
+// Chalo yeh karke dikhao 
+//  - YO YO HONEY SINGH ft. me ;)
 mongoose.connect(process.env.DBURL, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, useFindAndModify: false });
 
 
