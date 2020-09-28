@@ -14,7 +14,7 @@ app.set('view engine', 'ejs');
 // Connect to mongoDB local host
 // mongoose.connect('mongodb://localhost/ttmm', { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, useFindAndModify: false });
 // Connect to mongoDB atlas
-mongoose.connect('mongodb+srv://dbUser:cAfoxVXZNqiXKdID@cluster0.fdsc5.mongodb.net/ttmmdb?retryWrites=true&w=majority', { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, useFindAndModify: false });
+mongoose.connect(process.env.DBURL, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, useFindAndModify: false });
 
 
 mongoose.Promise = global.Promise;
