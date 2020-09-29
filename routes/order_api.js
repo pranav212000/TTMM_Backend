@@ -37,19 +37,65 @@ router.get('/', function (req, res, next) {
 
 
 router.delete('/deleteOrder', function (req, res, next) {
-    Order.findOneAndDelete(
-        { [constants.orderId]: req.query.orderId },
-        function (error) {
-            if (error) {
-                res.send({ isSuccess: false });
-            } else
-                res.send({ isSuccess: true });
+
+    Order.findOne({ [constants.orderId]: req.query.orderId }, function (error, order) {
+        if (error) {
+            console.log(error);
+            res.send({ message: error, isSuccess: false });
+        } else {
+            if (order === null) {
+                console.log('Could not find order');
+                res.status(404).send({ message: 'Could not find order', isSuccess: false });
+            } else {
+                var eventId = order.eventId;
+                Event.findOneAndUpdate(
+                    { [constants.eventId]: eventId },
+                    { $pull: { [constants.orders]: req.query.orderId } },
+                    { new: true },
+                    function (error, event) {
+                        if (error) {
+                            console.log(error);
+                            res.send({ message: error, isSuccess: false });
+                        } else {
+                            if (event === null) {
+                                res.status(404).send({ message: 'Could not find the event', isSuccess: false });
+                            } else {
+                                Order.findOneAndDelete(
+                                    { [constants.orderId]: req.query.orderId },
+                                    function (error) {
+                                        if (error) {
+                                            console.log(err);
+                                            res.send({ isSuccess: false, message: err });
+                                        } else {
+                                            res.send({ isSuccess: true, message: 'Success' });
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
+                );
+            }
         }
-    );
+    });
+
+
+    // Order.findOneAndDelete(
+    //     { [constants.orderId]: req.query.orderId },
+    //     function (error) {
+    //         if (error) {
+    //             res.send({ isSuccess: false });
+    //         } else
+    //             res.send({ isSuccess: true });
+    //     }
+    // );
 });
 
 // Edit the order
 router.put('/editOrder/:orderId', function (req, res, next) {
+
+
+
     Order.findOneAndUpdate(
         { [constants.orderId]: req.params.orderId },
         req.body,
