@@ -14,6 +14,7 @@ var getOrder = function (orderId) {
                 console.log(error);
                 reject(error);
             } else {
+                console.log(order);
                 resolve(order);
             }
         });
@@ -21,28 +22,31 @@ var getOrder = function (orderId) {
 }
 
 
-router.get('/:orderId', function (req, res, next) {
+router.get('/', function (req, res, next) {
 
-    getOrder(req.params.orderId, function (orderResult) {
-        if (orderResult.status === 'error') {
-            res.status(500).send({
-                'isSuccess': false,
-                result: orderResult.error,
-            });
+    getOrder(req.query.orderId).then((order) => {
+        if (order === null) {
+            res.status(404).send(null);
         } else {
-            if (orderResult.result === null) {
-                res.status(404).send({
-                    message: 'Could not find order with orderid' + req.params.orderId,
-                })
-            }
-            else
-                res.send(orderResult.result);
+            res.send(order);
         }
-    });
+    }).catch((error) => {
+        res.send(error);
+    })
 });
 
 
-
+router.delete('/deleteOrder', function (req, res, next) {
+    Order.findOneAndDelete(
+        { [constants.orderId]: req.query.orderId },
+        function (error) {
+            if (error) {
+                res.send({ isSuccess: false });
+            } else
+                res.send({ isSuccess: true });
+        }
+    );
+});
 
 // Edit the order
 router.put('/editOrder/:orderId', function (req, res, next) {
