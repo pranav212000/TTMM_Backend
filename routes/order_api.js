@@ -14,8 +14,11 @@ var getOrder = function (orderId) {
                 console.log(error);
                 reject(error);
             } else {
-                console.log(order);
-                resolve(order);
+                if(order === null)
+                reject('COULD NOT FIND ORDER');
+                else{
+                    console.log(order);
+                resolve(order);}
             }
         });
     });
