@@ -14,11 +14,12 @@ var getOrder = function (orderId) {
                 console.log(error);
                 reject(error);
             } else {
-                if(order === null)
-                reject('COULD NOT FIND ORDER');
-                else{
+                if (order === null)
+                    reject('COULD NOT FIND ORDER');
+                else {
                     console.log(order);
-                resolve(order);}
+                    resolve(order);
+                }
             }
         });
     });
@@ -95,15 +96,23 @@ router.delete('/deleteOrder', function (req, res, next) {
 });
 
 // Edit the order
-router.put('/editOrder/:orderId', function (req, res, next) {
-
-
+router.put('/updateOrder', function (req, res, next) {
 
     Order.findOneAndUpdate(
-        { [constants.orderId]: req.params.orderId },
+        { [constants.orderId]: req.query.orderId },
         req.body,
         { new: true },
         function (error, order) {
+            if (error) {
+                console.log(error);
+                res.status(500).send(error);
+            } else {
+                if (order === null) {
+                    res.status(404).send({ message: 'Could not find order' });
+                } else {
+                    res.send(order);
+                }
+            }
 
         });
 
