@@ -38,7 +38,7 @@ app.use(express.static('./public'));
 // Initialize the routes
 app.use('/api/user', require('./routes/user_api'));
 app.use('/api/group', require('./routes/group_api'));
-app.use('/api/event', require('./routes/event_api'));
+app.use('/api/event', require('./routes/event_api').router);
 app.use('/api/order', require('./routes/order_api').router);
 app.use('/api/transaction', require('./routes/transaction_api'));
 

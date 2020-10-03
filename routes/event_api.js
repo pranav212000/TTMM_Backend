@@ -191,7 +191,18 @@ function addToTransaction(event, order, isNew, res) {
 
 
 router.get('/:eventId/orders', function (req, res, next) {
-    Event.findOne({ [constants.eventId]: req.params.eventId }, function (error, event) {
+    getEventOrders(req.params.eventId, function (result) {
+        if (result.isSuccess) {
+            res.send(result.response);
+        } else {
+            res.send(result.error);
+        }
+    });
+});
+
+
+getEventOrders = function (eventId, callback) {
+    Event.findOne({ [constants.eventId]: eventId }, function (error, event) {
         if (error) {
             console.error(error);
             res.status(500).send({
@@ -208,16 +219,17 @@ router.get('/:eventId/orders', function (req, res, next) {
 
                 Promise.all(orders.map(getOrder))
                     .then(response => {
-                        res.send(response);
+                        callback({ isSuccess: true, response: response });
+                        // res.send(response);
                     })
                     .catch(error => {
-                        res.send(error);
+                        callback({ isSuccess: false, error: error });
+                        // res.send(error);
                     });
             }
         }
     });
-});
+};
 
 
-
-module.exports = router;
+module.exports = { router: router, getEventOrders: getEventOrders };

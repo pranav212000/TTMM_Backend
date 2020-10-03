@@ -4,9 +4,10 @@ const constants = require('../constants');
 const User = require('../models/user');
 const { model } = require('mongoose');
 const Group = require('../models/group');
-const { eventId } = require('../constants');
+const { eventId, totalPaid, phoneNumber } = require('../constants');
 const Transaction = require('../models/transaction');
 const getOrder = require('./order_api').getOrder;
+const getEventOrders = require('./event_api').getEventOrders;
 
 const router = express.Router();
 
@@ -17,7 +18,7 @@ const router = express.Router();
 //     }).catch(next);
 // });
 
-
+// TODO change the toGet and toGive on paid!
 router.post('/paid', function (req, res, next) {
     var body = req.body;
 
@@ -45,6 +46,8 @@ router.post('/paid', function (req, res, next) {
                         console.log(error);
                         res.status(500).send({ isSuccess: false, error: error });
                     } else {
+                        
+                        
                         res.send(transaction);
                     }
 
@@ -69,15 +72,15 @@ router.post('/spiltEvenly', function (req, res, next) {
     Group.findOne({ [constants.groupEvents]: req.query.eventId }).then(function (group) {
         if (group === null) {
             console.log('Could not find group');
-            res.statusCode(404).send({ isSuccess: false, error: 'Could not find the group having event : ' + req.query.eventId });
+            res.status(404).send({ isSuccess: false, error: 'Could not find the group having event : ' + req.query.eventId });
         } else {
             var members = group[constants.groupMembers];
-            console.log(members);
+            // console.log(members);
             Transaction.findOne({ [constants.transactionId]: req.query.transactionId })
                 .then((transaction) => {
                     if (transaction === null) {
                         console.log('Could not find transaction');
-                        res.statusCode(404).send({ isSuccess: false, error: 'Could not find the transaction' });
+                        res.status(404).send({ isSuccess: false, error: 'Could not find the transaction' });
                     }
                     var totalCost = transaction[constants.totalCost];
                     var paid = transaction[constants.paid];
@@ -94,7 +97,7 @@ router.post('/spiltEvenly', function (req, res, next) {
                         } else {
                             paidAmount = result[constants.amount];
                         }
-                        console.log(paidAmount);
+                        // console.log(paidAmount);
                         if (paidAmount < sharePerMember)
                             toGive.push({ [constants.phoneNumber]: member, [constants.amount]: sharePerMember - paidAmount });
                         else if (paidAmount > sharePerMember)
@@ -113,7 +116,7 @@ router.post('/spiltEvenly', function (req, res, next) {
                     transaction.save(function (error) {
                         if (error) {
                             console.log(error);
-                            res.statusCode(500).send({ isSuccess: false, error: error });
+                            res.status(500).send({ isSuccess: false, error: error });
                         } else {
                             res.send(transaction);
                         }
@@ -128,6 +131,106 @@ router.post('/spiltEvenly', function (req, res, next) {
         }
     }).catch(next);
 
+});
+
+
+// TODO when adding order so this too ! Split the order too
+// Therse split apis are kept so that in case user change the split mode to even to byorder these can be called.
+
+
+router.post('/splitByOrder', function (req, res, next) {
+    getEventOrders(req.query.eventId, function (result) {
+        // console.log(result);
+        if (!result.isSuccess) {
+            res.status(500).send(result.error);
+        } else {
+            var orders = result.response;
+            var members = [];
+
+            orders.forEach(order => {
+                var phoneNumbers = order[constants.phoneNumber];
+
+                var totalCost = order[constants.totalCost];
+                var sharePerMember = totalCost / phoneNumbers.length;
+
+                phoneNumbers.forEach(phoneNumber => {
+                    var index = members.findIndex(member => member[constants.phoneNumber] === phoneNumber);
+
+
+                    var isPresent = index !== -1;
+
+                    if (isPresent) {
+                        members[index][constants.amount] += sharePerMember;
+                    } else {
+                        members.push({ [constants.phoneNumber]: phoneNumber, [constants.amount]: sharePerMember });
+                    }
+
+                });
+
+            });
+
+
+
+            Transaction.findOne({ [constants.transactionId]: req.query.transactionId }).then(function (transaction) {
+
+                if (transaction === null) {
+                    console.log('Could not find the transaction');
+                    res.status(404).send({ isSuccess: false, error: 'Could not find the transaction' });
+
+                } else {
+                    var paid = transaction[constants.paid];
+                    var toGet = [];
+                    var toGive = [];
+
+                    members.forEach(member => {
+
+                        var result = paid.find(obj => {
+                            return obj[constants.phoneNumber] === member[constants.phoneNumber];
+                        });
+                        var paidAmount;
+                        if (result === undefined) {
+                            paidAmount = 0;
+                        } else {
+                            paidAmount = result[constants.amount];
+                        }
+                        if (paidAmount < member[constants.amount]) {
+                            toGive.push({
+                                [constants.phoneNumber]: member[constants.phoneNumber],
+                                [constants.amount]: member[constants.amount] - paidAmount
+                            });
+                        }
+                        else if (paidAmount > member[constants.amount]) {
+                            toGet.push({
+                                [constants.phoneNumber]: member[constants.phoneNumber],
+                                [constants.amount]: paidAmount - member[constants.amount]
+                            });
+                        }
+
+                    });
+
+
+                    transaction[constants.toGive] = toGive;
+                    transaction[constants.toGet] = toGet;
+
+                    transaction.markModified([constants.toGive]);
+                    transaction.markModified([constants.toGet]);
+
+                    transaction.save(function (error) {
+                        if (error) {
+                            console.log(error);
+                            res.status(500).send({ isSuccess: false, error: error });
+                        } else {
+                            res.send(transaction);
+                        }
+                    })
+
+                }
+
+
+            });
+
+        }
+    })
 });
 
 
