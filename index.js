@@ -40,13 +40,14 @@ app.use('/api/user', require('./routes/user_api'));
 app.use('/api/group', require('./routes/group_api'));
 app.use('/api/event', require('./routes/event_api'));
 app.use('/api/order', require('./routes/order_api').router);
+app.use('/api/transaction', require('./routes/transaction_api'));
 
 app.get('/', function (req, res) {
     res.render('home');
 });
 // Error handling middleware
 app.use(function (err, req, res, next) {
-    // console.log(err);
+    console.log(err.message);
     res.status(422).send({ error: err.message });
 });
 

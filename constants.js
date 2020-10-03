@@ -27,8 +27,17 @@ var constants = {
     totalCost: 'totalCost',
 
     transactionId: 'transactionId',
+    given: 'given',               //who gave how much amount to whom?
+    got: 'got',                   //Who got how much from whom?
+    paid: 'paid',             //who are paying ? history of who all paid the amount
+    toGet: 'toGet',                //Who is to get how much?
     toGive: 'toGive',
-    toGet: 'toGet'
+    from: 'from',
+    to: 'to',
+    amount: 'amount',
+    totalPaid: 'totalPaid'                  //Bill total amount paid 
+
+
 
 
 };
