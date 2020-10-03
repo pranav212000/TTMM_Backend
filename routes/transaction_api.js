@@ -18,7 +18,6 @@ const router = express.Router();
 //     }).catch(next);
 // });
 
-// TODO change the toGet and toGive on paid!
 router.post('/paid', function (req, res, next) {
     var body = req.body;
 
@@ -27,32 +26,106 @@ router.post('/paid', function (req, res, next) {
             res.status(404).send({ isSuccess: false, error: 'Could not find event' });
         } else {
             var transactionId = event[constants.transactionId];
-            Transaction.findOneAndUpdate(
-                { [constants.transactionId]: transactionId },
-                {
-                    $push: {
-                        [constants.paid]: {
-                            [constants.phoneNumber]: body[constants.phoneNumber],
-                            [constants.amount]: body[constants.amount]
-                        }
-                    },
-                    $inc: {
-                        [constants.totalPaid]: body[constants.amount]
+
+            Transaction.findOne({ [constants.transactionId]: transactionId })
+                .then(function (transaction) {
+                    if (transaction === null) {
+                        console.log('Could not find transaction');
+                        res.status(404).send({ isSuccess: false, error: 'Could not find transaction' });
                     }
-                },
-                { new: true },
-                function (error, transaction) {
-                    if (error) {
-                        console.log(error);
-                        res.status(500).send({ isSuccess: false, error: error });
-                    } else {
-                        
-                        
-                        res.send(transaction);
+                    else {
+                        var paid = transaction[constants.paid];
+                        var paidIndex = paid.findIndex(obj => obj[constants.phoneNumber] === body[constants.phoneNumber]);
+                        if (paidIndex === -1) {
+                            paid.push({
+                                [constants.phoneNumber]: body[constants.phoneNumber],
+                                [constants.amount]: body[constants.amount]
+                            });
+                            transaction[constants.paid] = paid;
+                        } else {
+                            var paidAmount = paid[paidIndex][constants.amount];
+                            paid[paidIndex][constants.amount] = paidAmount + Number.parseInt(body[constants.amount]);
+                            transaction[constants.paid] = paid;
+                        }
+                        var toGet = transaction[constants.toGet];
+                        var toGive = transaction[constants.toGive];
+
+                        var index = toGive.findIndex(ele => ele[constants.phoneNumber] === body[constants.phoneNumber]);
+
+
+                        if (index === -1) {
+                            // TODO search in to get
+                            var index1 = toGet.findIndex(ele => ele[constants.phoneNumber] === body[constants.phoneNumber]);
+                            if (index === -1) {
+                                toGet.push({
+                                    [constants.phoneNumber]: body[constants.phoneNumber],
+                                    [constants.amount]: body[constants.amount]
+                                });
+                            } else {
+                                toGet[index1][constants.amount] += body[constants.amount];
+                            }
+
+                        } else {
+                            var amount = toGive[index][constants.amount];
+                            if (body[constants.amount] > amount) {       //paid more than toGive => remove from toGive and add to toGet
+                                toGive.splice(index, 1);
+                                toGet.push({
+                                    [constants.phoneNumber]: body[constants.phoneNumber],
+                                    [constants.amount]: body[constants.amount] - amount
+                                });
+
+                            } else {
+                                toGive[index][constants.amount] = amount - body[constants.amount];
+                            }
+                        }
+
+                        transaction[constants.toGive] = toGive;
+                        transaction[constants.toGet] = toGet;
+
+                        transaction.markModified([constants.toGive]);
+                        transaction.markModified([constants.toGet]);
+                        transaction.markModified([constants.paid]);
+                        // TODO update paid cost
+
+                        transaction.save(function (error) {
+                            if (error) {
+                                console.log(error);
+                                res.status(500).send({ isSuccess: false, error: error });
+                            } else {
+                                res.send(transaction);
+                            }
+                        });
                     }
 
-                }
-            )
+
+                }).catch(next);
+
+
+
+            // Transaction.findOneAndUpdate(
+            //     { [constants.transactionId]: transactionId },
+            //     {
+            //         $push: {
+            //             [constants.paid]: {
+            //                 [constants.phoneNumber]: body[constants.phoneNumber],
+            //                 [constants.amount]: body[constants.amount]
+            //             }
+            //         },
+            //         $inc: {
+            //             [constants.totalPaid]: body[constants.amount]
+            //         }
+            //     },
+            //     { new: true },
+            //     function (error, transaction) {
+            //         if (error) {
+            //             console.log(error);
+            //             res.status(500).send({ isSuccess: false, error: error });
+            //         } else {
+
+            //         }
+
+            //     }
+            // )
         }
     });
 });
@@ -109,9 +182,11 @@ router.post('/spiltEvenly', function (req, res, next) {
 
                     transaction[constants.toGive] = toGive;
                     transaction[constants.toGet] = toGet;
+                    transaction[constants.split] = constants.evenly;
 
                     transaction.markModified([constants.toGive]);
                     transaction.markModified([constants.toGet]);
+                    transaction.markModified([constants.split]);
 
                     transaction.save(function (error) {
                         if (error) {
@@ -211,9 +286,11 @@ router.post('/splitByOrder', function (req, res, next) {
 
                     transaction[constants.toGive] = toGive;
                     transaction[constants.toGet] = toGet;
+                    transaction[constants.split] = constants.byOrder;
 
                     transaction.markModified([constants.toGive]);
                     transaction.markModified([constants.toGet]);
+                    transaction.markModified([constants.split]);
 
                     transaction.save(function (error) {
                         if (error) {

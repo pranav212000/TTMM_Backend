@@ -27,6 +27,9 @@ var constants = {
     totalCost: 'totalCost',
 
     transactionId: 'transactionId',
+    split: 'split',
+    byOrder: 'byOrder',
+    evenly: 'evenly',
     given: 'given',               //who gave how much amount to whom?
     got: 'got',                   //Who got how much from whom?
     paid: 'paid',             //who are paying ? history of who all paid the amount
