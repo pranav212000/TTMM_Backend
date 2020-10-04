@@ -81,11 +81,12 @@ router.post('/paid', function (req, res, next) {
 
                         transaction[constants.toGive] = toGive;
                         transaction[constants.toGet] = toGet;
+                        transaction[constants.totalPaid] += body[constants.amount];
 
                         transaction.markModified([constants.toGive]);
                         transaction.markModified([constants.toGet]);
                         transaction.markModified([constants.paid]);
-                        // TODO update paid cost
+
 
                         transaction.save(function (error) {
                             if (error) {

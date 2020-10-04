@@ -4,7 +4,7 @@ const constants = require('../constants');
 const User = require('../models/user');
 const { model } = require('mongoose');
 const Group = require('../models/group');
-const { eventId } = require('../constants');
+const { eventId, toGet, split, amount, totalCost } = require('../constants');
 const getOrder = require('./order_api').getOrder;
 const Transaction = require('../models/transaction');
 const router = express.Router();
@@ -160,32 +160,129 @@ function addOrderToEvent(order, eventId, res) {
 
 
 function addToTransaction(event, order, isNew, res) {
-    Transaction.findOneAndUpdate(
-        { [constants.transactionId]: event[constants.transactionId] },
-        { $inc: { [constants.totalCost]: order[constants.totalCost] } },
-        { new: true },
-        function (error, transaction) {
-            if (error) {
-                console.log(error);
-                res.send({
-                    isSuccess: false,
-                    error: error
+
+    Group.findOne({ [constants.groupEvents]: event[constants.eventId] }).then(function (group) {
+        if (group === null) {
+            console.log('Could not find group having event : ' + event[constants.eventId]);
+            res.status(404).send({ isSuccess: false, error: 'Could not find the group having event : ' + event[constants.eventId] });
+        } else {
+            var members = group[constants.groupMembers];
+
+            Transaction.findOne({ [constants.transactionId]: event[constants.transactionId] })
+                .then(function (transaction) {
+                    if (transaction === null) {
+                        console.log('Could not find transaction with id: ' + event[constants.transactionId]);
+                        res.status(404).send({ isSuccess: false, error: 'Could not find transaction with id: ' + event[constants.transactionId] })
+                    } else {
+                        transaction[totalCost] += order[constants.totalCost];
+
+                        var splitType = transaction[constants.split];
+
+                        if (splitType === constants.evenly) {
+                            var toGive = transaction[constants.toGive];
+                            var toGet = transaction[constants.toGet];
+                            var splitPerMember = order[constants.totalCost] / members.length;
+                            members.forEach(member => {
+                                var index = toGive.findIndex(obj => obj[constants.phoneNumber] === member);
+                                if (index !== -1) {
+                                    toGive[index][constants.amount] += splitPerMember;
+                                } else {
+                                    var index1 = toGet.findIndex(obj => obj[constants.phoneNumber] === member);
+                                    if (index1 !== -1) {
+                                        if (toGet[index1][constants.amount] > splitPerMember) {
+                                            toGet[index1][constants.amount] -= splitPerMember;
+                                        } else if (toGet[index1][constants.amount] < splitPerMember) {
+                                            var temp = toGet[index1];
+                                            toGet.splice(index1, 1);
+                                            temp[constants.amount] = splitPerMember - temp[constants.amount];
+                                            toGive.push(temp);
+                                        } else {
+                                            toGet.splice(index1, 1);
+                                        }
+                                    } else {
+                                        toGive.push({ [constants.phoneNumber]: member, [constants.amount]: splitPerMember });
+                                    }
+                                }
+                            });
+
+
+
+                            transaction[constants.toGet] = toGet;
+                            transaction[constants.toGive] = toGive;
+
+                        }
+
+                    }
+
+
+                    transaction.markModified([constants.totalCost]);
+                    transaction.markModified([constants.toGet]);
+                    transaction.markModified([constants.toGive]);
+
+
+                    transaction.save(function (error) {
+                        if (error) {
+                            console.log(error);
+                            res.status(500).send({ isSuccess: false, error: error });
+                        } else {
+                            // TODO remove transaciton from following line and jsut send the order
+                            res.send({ order: order, transaction: transaction });
+                        }
+                    })
                 });
-            } else {
-                if (transaction === null) {
-                    console.log('Could not find transaction');
-                    res.status(404).send({
-                        isSuccess: false,
-                        error: 'Could not find transaction'
-                    });
-                } else {
-                    console.log("Amount added to transaction");
-                    console.log(transaction);
-                    res.send(order);
-                }
-            }
         }
-    );
+    })
+
+    // Transaction.findOne({ [constants.transactionId]: event[constants.transactionId] })
+    //     .then(function (transaction) {
+    //         transaction[constants.totalCost] += order[constants.totalCost];
+
+
+    //         if (splitType === constants.evenly) {
+
+    //             var toGive = transaction[constants.toGive];
+
+    //             toGive.forEach(element => {
+
+
+    //             });
+
+
+    //         }
+
+
+
+
+    //         transaction.markModified([constants.totalCost]);
+    //     });
+
+
+    // Transaction.findOneAndUpdate(
+    //     { [constants.transactionId]: event[constants.transactionId] },
+    //     { $inc: { [constants.totalCost]: order[constants.totalCost] } },
+    //     { new: true },
+    //     function (error, transaction) {
+    //         if (error) {
+    //             console.log(error);
+    //             res.send({
+    //                 isSuccess: false,
+    //                 error: error
+    //             });
+    //         } else {
+    //             if (transaction === null) {
+    //                 console.log('Could not find transaction');
+    //                 res.status(404).send({
+    //                     isSuccess: false,
+    //                     error: 'Could not find transaction'
+    //                 });
+    //             } else {
+    //                 console.log("Amount added to transaction");
+    //                 console.log(transaction);
+    //                 res.send(order);
+    //             }
+    //         }
+    //     }
+    // );
 }
 
 
