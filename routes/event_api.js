@@ -13,32 +13,34 @@ const router = express.Router();
 router.post('/addEvent', function (req, res, next) {
 
 
-    Event.create(req.body).then(function (event) {
-        Group.findOneAndUpdate(
-            { [constants.groupId]: req.query.groupId },
-            { $push: { [constants.groupEvents]: event[constants.eventId] } },
-            { new: true },
-            function (error, success) {
-                if (error) {
-                    console.log("ERROR");
-                    console.log(error);
+    Event.create({ [constants.eventId]: req.body[constants.eventId], [constants.eventName]: req.body[constants.eventName] })
+        .then(function (event) {
+            Group.findOneAndUpdate(
+                { [constants.groupId]: req.query.groupId },
+                { $push: { [constants.groupEvents]: event[constants.eventId] } },
+                { new: true },
+                function (error, success) {
+                    if (error) {
+                        console.log("ERROR");
+                        console.log(error);
+                    }
+                    else {
+                        // console.log('Success');
+                        // console.log(success);
+                        Transaction.create({ [constants.transactionId]: event.transactionId, [constants.split]: req.query.split }).then(function (transaction) {
+                            if (transaction === null) {
+                                console.log('Transaction not created, transaction Id: ' + event.transactionId);
+                                res.send({ isSuccess: false, message: 'Could not create transaction' });
+                            } else {
+                                res.send(event);
+                            }
+                        }).catch(next);
+                    }
                 }
-                else {
-                    // console.log('Success');
-                    // console.log(success);
-                }
-            }
-        )
-        Transaction.create({ [constants.transactionId]: event.transactionId, [constants.split]: req.query.split }).then(function (transaction) {
-            if (transaction === null) {
-                console.log('Transaction not created, transaction Id: ' + event.transactionId);
-                res.send({ isSuccess: false, message: 'Could not create transaction' });
-            } else {
-                res.send(event);
-            }
+            );
+
+            // res.send(event);
         }).catch(next);
-        // res.send(event);
-    }).catch(next);
 });
 
 router.get('/', function (req, res, next) {
