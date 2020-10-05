@@ -29,7 +29,7 @@ router.post('/addEvent', function (req, res, next) {
                 }
             }
         )
-        Transaction.create({ [constants.transactionId]: event.transactionId }).then(function (transaction) {
+        Transaction.create({ [constants.transactionId]: event.transactionId, [constants.split]: req.query.split }).then(function (transaction) {
             if (transaction === null) {
                 console.log('Transaction not created, transaction Id: ' + event.transactionId);
                 res.send({ isSuccess: false, message: 'Could not create transaction' });

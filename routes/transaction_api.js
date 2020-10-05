@@ -203,7 +203,7 @@ router.post('/spiltEvenly', function (req, res, next) {
 
 });
 
-
+// TODO SPLIT BY QUANTITY one orders one roti
 //! Therse split apis are kept so that in case user change the split mode to even to byorder these can be called.
 router.post('/splitByOrder', function (req, res, next) {
     getEventOrders(req.query.eventId, function (result) {
