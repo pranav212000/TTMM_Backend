@@ -141,7 +141,7 @@ function getEvent(eventId, callback) {
 }
 
 
-
+// ASSUMES total cost is correct maybe changed later
 router.post('/spiltEvenly', function (req, res, next) {
     Group.findOne({ [constants.groupEvents]: req.query.eventId }).then(function (group) {
         if (group === null) {
@@ -196,24 +196,15 @@ router.post('/spiltEvenly', function (req, res, next) {
                         } else {
                             res.send(transaction);
                         }
-                    })
-
-
+                    });
                 });
-            // Transaction.findOneAndUpdate(
-            //     { [constants.transactionId]: req.query.transactionId },
-            //     {}
-            // )
         }
     }).catch(next);
 
 });
 
 
-// TODO when adding order so this too ! Split the order too
-// Therse split apis are kept so that in case user change the split mode to even to byorder these can be called.
-
-
+//! Therse split apis are kept so that in case user change the split mode to even to byorder these can be called.
 router.post('/splitByOrder', function (req, res, next) {
     getEventOrders(req.query.eventId, function (result) {
         // console.log(result);
@@ -223,10 +214,12 @@ router.post('/splitByOrder', function (req, res, next) {
             var orders = result.response;
             var members = [];
 
+            var transTotal = 0;
             orders.forEach(order => {
                 var phoneNumbers = order[constants.phoneNumber];
 
                 var totalCost = order[constants.totalCost];
+                transTotal += totalCost;
                 var sharePerMember = totalCost / phoneNumbers.length;
 
                 phoneNumbers.forEach(phoneNumber => {
@@ -254,6 +247,8 @@ router.post('/splitByOrder', function (req, res, next) {
                     res.status(404).send({ isSuccess: false, error: 'Could not find the transaction' });
 
                 } else {
+
+                    transaction[constants.totalCost] = transTotal;
                     var paid = transaction[constants.paid];
                     var toGet = [];
                     var toGive = [];
@@ -289,6 +284,8 @@ router.post('/splitByOrder', function (req, res, next) {
                     transaction[constants.toGet] = toGet;
                     transaction[constants.split] = constants.byOrder;
 
+
+                    transaction.markModified([constants.totalCost]);
                     transaction.markModified([constants.toGive]);
                     transaction.markModified([constants.toGet]);
                     transaction.markModified([constants.split]);

@@ -205,13 +205,41 @@ function addToTransaction(event, order, isNew, res) {
                                 }
                             });
 
-
-
                             transaction[constants.toGet] = toGet;
                             transaction[constants.toGive] = toGive;
 
-                        }
+                        } else if (splitType === constants.byOrder) {    // TODO if more splits are to be added add here
+                            var members = order[constants.phoneNumber];
 
+                            var toGive = transaction[constants.toGive];
+                            var toGet = transaction[constants.toGet];
+
+                            var splitPerMember = order[constants.totalCost] / members.length;
+
+                            members.forEach(member => {
+                                var index = toGive.findIndex(obj => obj[constants.phoneNumber] === member);
+                                if (index !== -1) {
+                                    toGive[index][constants.amount] += splitPerMember;
+                                } else {
+                                    var index2 = toGet.findIndex(obj => obj[constants.phoneNumber] === member);
+
+                                    if (index2 !== -1) {
+                                        if (toGet[index2][constants.amount] > splitPerMember) {
+                                            toGet[index2][constants.amount] -= splitPerMember;
+                                        } else if (toGet[index2][constants.amount] < splitPerMember) {
+                                            var remainingAmount = splitPerMember - toGet[index2][constants.amount];
+                                            toGet.splice(index2, 1);
+                                            toGive.push({ [constants.phoneNumber]: member, [constants.amount]: remainingAmount });
+                                        } else {
+                                            toGive.push({ [constants.phoneNumber]: member, [constants.amount]: splitPerMember });
+                                        }
+                                    }
+                                }
+
+                            });
+                            transaction[constants.toGet] = toGet;
+                            transaction[constants.toGive] = toGive;
+                        }
                     }
 
 
