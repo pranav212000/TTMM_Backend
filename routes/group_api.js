@@ -2,6 +2,7 @@ const express = require('express');
 const Group = require('../models/group');
 const constants = require('../constants');
 const User = require('../models/user');
+const getEvent = require('./event_api').getEvent;
 const { phoneNumber, groupId } = require('../constants');
 const router = express.Router();
 
@@ -65,5 +66,46 @@ router.get('/multiple', function (req, res, next) {
         .catch(error => res.send(error));
 });
 
+
+router.get('/:groupId/events', function (req, res, next) {
+    getGroupEvents(req.params.groupId, function (result) {
+        if (result.isSuccess) {
+            res.send(result.response);
+        } else {
+            res.status(result.status).send(result.error);
+        }
+    });
+});
+
+
+
+getGroupEvents = function (groupId, callback) {
+    Group.findOne({ [constants.groupId]: groupId }, function (error, group) {
+        if (error) {
+            console.error(error);
+            callback({ isSuccess: false, error: error, status: 500 });
+        } else {
+            if (group === null) {
+                callback({
+                    isSuccess: false,
+                    error: 'Could not find group with id : ' + req.params.groupId,
+                    status: 404
+                });
+            }
+            else {
+                var events = group[constants.groupEvents];
+
+                Promise.all(events.map(getEvent))
+                    .then(response => {
+                        callback({ isSuccess: true, response: response });
+                    })
+                    .catch(error => {
+                        callback({ isSuccess: false, error: error });
+                    });
+            }
+
+        }
+    })
+}
 
 module.exports = router;

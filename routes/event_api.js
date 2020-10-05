@@ -67,6 +67,7 @@ var getEvent = function (eventId) {
     })
 }
 
+// TODO get events by group id!!
 
 router.get('/multiple', function (req, res, next) {
     var eventIds = req.body.eventIds;
@@ -322,7 +323,7 @@ router.get('/:eventId/orders', function (req, res, next) {
         if (result.isSuccess) {
             res.send(result.response);
         } else {
-            res.send(result.error);
+            res.status(result.status).send(result.error);
         }
     });
 });
@@ -332,26 +333,24 @@ getEventOrders = function (eventId, callback) {
     Event.findOne({ [constants.eventId]: eventId }, function (error, event) {
         if (error) {
             console.error(error);
-            res.status(500).send({
-                'isSuccess': false,
-                result: error
-            });
+            callback({ isSuccess: false, error: error, status: 500 });
         } else {
-            if (event === null)
-                res.status(404).send({
-                    message: 'Coud not find the event with event id : ' + req.params.eventId
+            if (event === null) {
+                callback({
+                    isSuccess: false,
+                    error: 'Could not find event with event id : ' + req.params.eventId,
+                    status: 404
                 });
+            }
             else {
                 var orders = event[constants.orders];
 
                 Promise.all(orders.map(getOrder))
                     .then(response => {
                         callback({ isSuccess: true, response: response });
-                        // res.send(response);
                     })
                     .catch(error => {
                         callback({ isSuccess: false, error: error });
-                        // res.send(error);
                     });
             }
         }
@@ -359,4 +358,4 @@ getEventOrders = function (eventId, callback) {
 };
 
 
-module.exports = { router: router, getEventOrders: getEventOrders };
+module.exports = { router: router, getEventOrders: getEventOrders, getEvent: getEvent };
