@@ -48,6 +48,8 @@ TransactionSchema = new Schema({
     [constants.paid]: {
         type: [{
             [constants.phoneNumber]: String,
+            [con
+                stants.paymentMode] : String,
             [constants.amount]: Number
         }],
         default: []

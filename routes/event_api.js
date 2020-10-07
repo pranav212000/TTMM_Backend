@@ -45,6 +45,10 @@ router.post('/addEvent', function (req, res, next) {
 
 router.get('/', function (req, res, next) {
     Event.findOne({ [constants.eventId]: req.query.eventId }).then(function (event) {
+        if (event === null) {
+            console.log('Could not find the event');
+            res.status(404).send({ isSuccess: false, error: 'Could not find the event' });
+        }
         res.send(event);
     }).catch(next);
 });
