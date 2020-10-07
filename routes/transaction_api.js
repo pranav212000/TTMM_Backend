@@ -35,11 +35,15 @@ router.post('/paid', function (req, res, next) {
                     }
                     else {
                         var paid = transaction[constants.paid];
-                        var paidIndex = paid.findIndex(obj => obj[constants.phoneNumber] === body[constants.phoneNumber]);
+                        var paidIndex = paid.findIndex(obj =>
+                            obj[constants.phoneNumber] === body[constants.phoneNumber] &&
+                            obj[constants.paymentMode] === body[constants.paymentMode]);
                         if (paidIndex === -1) {
                             paid.push({
                                 [constants.phoneNumber]: body[constants.phoneNumber],
-                                [constants.amount]: body[constants.amount]
+                                [constants.amount]: body[constants.amount],
+                                [constants.paymentMode]: body[constants.paymentMode]
+
                             });
                             transaction[constants.paid] = paid;
                         } else {
