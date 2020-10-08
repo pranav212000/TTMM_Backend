@@ -4,7 +4,7 @@ const constants = require('../constants');
 const User = require('../models/user');
 const { model } = require('mongoose');
 const Group = require('../models/group');
-const { eventId, totalPaid, phoneNumber } = require('../constants');
+const { eventId, totalPaid, phoneNumber, toGet, toGive } = require('../constants');
 const Transaction = require('../models/transaction');
 const getOrder = require('./order_api').getOrder;
 const getEventOrders = require('./event_api').getEventOrders;
@@ -18,7 +18,7 @@ const router = express.Router();
 //     }).catch(next);
 // });
 
-router.post('/paid', function (req, res, next) {
+router.post('/payBill', function (req, res, next) {
     var body = req.body;
 
     getEvent(req.query.eventId, function (event) {
@@ -60,7 +60,7 @@ router.post('/paid', function (req, res, next) {
                         if (index === -1) {
                             // TODO search in to get
                             var index1 = toGet.findIndex(ele => ele[constants.phoneNumber] === body[constants.phoneNumber]);
-                            if (index === -1) {
+                            if (index1 === -1) {
                                 toGet.push({
                                     [constants.phoneNumber]: body[constants.phoneNumber],
                                     [constants.amount]: body[constants.amount]
@@ -134,6 +134,101 @@ router.post('/paid', function (req, res, next) {
         }
     });
 });
+
+
+
+// TODO test!
+router.post('/payPerson', function (req, res, next) {
+    var body = req.body;
+    getEvent(req.query.eventId, function (event) {
+        if (event === null) {
+            res.status(404).send({ isSuccess: false, error: 'Could not find event' });
+        } else {
+            var transactionId = event[constants.transactionId];
+
+            Transaction.findOne({ [constants.transactionId]: transactionId })
+                .then(function (transaction) {
+                    if (transaction === null) {
+                        console.log('Could not find transaction');
+                        res.status(404).send({ isSuccess: false, error: 'Could not find transaction' });
+                    }
+                    else {
+
+                        // ! BODY structure : 
+                        var phoneNumber = body[constants.phoneNumber];
+                        var to = body[constants.to];
+                        var amount = body[constants.amount];
+
+                        var toGet = transaction[constants.toGet];
+                        var toGive = transaction[constants.toGive];
+                        var got = transaction[constants.got];
+                        var given = transaction[constants.given];
+
+                        var toGetIndex = toGet.findIndex(ele => ele[constants.phoneNumber] === to);
+                        if (toGetIndex !== -1) {
+                            var toGetAmount = toGet[toGetIndex][constants.amount];
+                            if (toGetAmount > amount) {
+                                toGet[toGetIndex][constants.amount] -= amount;
+                            } else if (toGetAmount < amount) {
+                                toGet.splice(toGetIndex, 1);
+                                toGive.push({ [constants.phoneNumber]: to, [constants.amount]: amount - toGetAmount });
+                            } else {
+                                toGet.splice(toGetIndex, 1);
+                            }
+                        } else {
+                            toGive.push({ [constants.phoneNumber]: to, [constants.amount]: amount });
+                        }
+
+                        var toGiveIndex = toGive.findIndex(obj => obj[constants.phoneNumber] === phoneNumber);
+                        if (toGiveIndex !== -1) {
+                            if (toGive[toGiveIndex][constants.amount] > amount) {
+                                toGive[toGiveIndex][constants.amount] -= amount;
+                            } else if (toGive[toGiveIndex][constants.amount] < amount) {
+                                toGive.splice(toGiveIndex, 1);
+                                toGet.push({ [constants.phoneNumber]: phoneNumber, [constants.amount]: amount - toGive[toGiveIndex][constants.amount] })
+                            } else {
+                                toGive.splice(toGiveIndex, 1);
+                            }
+                        } else {
+                            toGetIndex = toGet.findIndex(obj => obj[constants.phoneNumber] === phoneNumber);
+                            if (toGetIndex !== -1) {
+                                toGet[toGetIndex][constants.amount] += amount;
+                            } else {
+                                toGet.push({ [constants.phoneNumber]: phoneNumber, [constants.amount]: amount })
+                            }
+                        }
+
+                        got.push({ [constants.phoneNumber]: to, [constants.from]: phoneNumber, [constants.amount]: amount });
+                        given.push({ [constants.phoneNumber]: phoneNumber, [constants.to]: to, [constants.amount]: amount });
+
+
+
+
+                        transaction[constants.toGive] = toGive;
+                        transaction[constants.toGet] = toGet;
+                        transaction[constants.got] = got;
+                        transaction[constants.given] = given;
+
+                        transaction.markModified(toGet);
+                        transaction.markModified(toGive);
+                        transaction.markModified(got);
+                        transaction.markModified(given);
+
+                        transaction.save(function (error) {
+                            if (error) {
+                                console.log(error);
+                                res.status(500).send({ isSuccess: false, error: error });
+                            } else {
+                                res.send(transaction);
+                            }
+                        });
+                    }
+                }).catch(next);
+
+
+        }
+    });
+})
 
 
 function getEvent(eventId, callback) {
