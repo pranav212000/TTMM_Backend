@@ -118,6 +118,18 @@ router.get('/toGive', function (req, res, next) {
 
 });
 
+router.get('/toGet', function (req, res, next) {
+    Transaction.find({ [constants.toGet]: { $elemMatch: { [constants.phoneNumber]: req.query[constants.phoneNumber] } } }).then(function (transactions) {
+        console.log(req.query[constants.phoneNumber]);
+        if (transactions === null) {
+            console.log('Could not find transaction');
+            res.status(404).send('Could not find transaction');
+        } else {
+            res.send(transactions);
+        }
+    }).catch(next);
+});
+
 
 
 
