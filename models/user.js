@@ -6,7 +6,7 @@ Schema = mongoose.Schema;
 
 
 UserSchema = new Schema({
-    [constants.uid]: { type: String, required: [true, 'Firebase userId is required'] },
+    [constants.uid]: { type: String, required: [true, 'Firebase userId is required'] , unique: true},
     [constants.name]: { type: String, required: [true, 'Name is required'] },
     [constants.phoneNumber]: { type: String, required: [true, 'Phone numeber is required'] },
     [constants.groups]: { type: [String], default: [] },

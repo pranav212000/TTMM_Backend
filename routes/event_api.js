@@ -150,16 +150,20 @@ function addOrderToEvent(order, eventId, res) {
                     error: error
                 })
             } else {
-                console.log("Order add to event");
-                console.log({
-                    'event': event,
-                    'order': order
-                });
+                if (event === null) {
+                    console.log('Could not find the event');
+                    res.status(404).send('Could not find the event');
+                } else {
+                    console.log("Order add to event");
+                    console.log({
+                        'event': event,
+                        'order': order
+                    });
 
-                addToTransaction(event, order, true, res);
-                console.log(event[constants.transactionId]);
-                console.log(order[constants.totalCost]);
-
+                    addToTransaction(event, order, true, res);
+                    console.log(event[constants.transactionId]);
+                    console.log(order[constants.totalCost]);
+                }
             }
         }
     )
@@ -240,6 +244,8 @@ function addToTransaction(event, order, isNew, res) {
                                         } else {
                                             toGive.push({ [constants.phoneNumber]: member, [constants.amount]: splitPerMember });
                                         }
+                                    } else {
+                                        toGive.push({ [constants.phoneNumber]: member, [constants.amount]: splitPerMember });
                                     }
                                 }
 

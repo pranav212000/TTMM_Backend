@@ -6,7 +6,7 @@ Schema = mongoose.Schema;
 
 TransactionSchema = new Schema({
 
-    [constants.transactionId]: { type: String, required: [true, 'TransactionId not specified'] },
+    [constants.transactionId]: { type: String, required: [true, 'TransactionId not specified'], unique: true },
     [constants.split]: { type: String, default: constants.byOrder },
     [constants.toGet]: {
         type: [{

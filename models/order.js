@@ -6,7 +6,7 @@ Schema = mongoose.Schema;
 
 OrderSchema = new Schema({
 
-    [constants.orderId]: { type: String, required: [true, 'Order id not specified'] },
+    [constants.orderId]: { type: String, required: [true, 'Order id not specified'] , unique: true},
     [constants.eventId]: { type: String, required: [true, 'Event Id is required'] },
     [constants.phoneNumber]: { type: [String], required: [true, 'Phone Number not specified'] },
     [constants.itemName]: { type: String, required: [true, 'Item name not specified'] },

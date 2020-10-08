@@ -3,12 +3,13 @@ const User = require('../models/user');
 const Group = require('../models/group');
 const Order = require('../models/order');
 const constants = require('../constants');
-const { uid } = require('../constants');
+const { uid, cost } = require('../constants');
+const Transaction = require('../models/transaction');
 const router = express.Router();
 
 
 router.post('/addUser', function (req, res, next) {
-    if(req.body[constants.profileUrl] === null || req.body[constants.profileUrl] === "")
+    if (req.body[constants.profileUrl] === null || req.body[constants.profileUrl] === "")
         req.body[constants.profileUrl] = "https://firebasestorage.googleapis.com/v0/b/ttmm-d9b4f.appspot.com/o/placeholders%2Fprofile_placeholder.jpg?alt=media&token=1cd39587-5053-47ee-a575-5aede7eddc9b";
     User.create(req.body).then(function (user) {
         console.log("User added");
@@ -103,7 +104,19 @@ router.get('/syncContacts', function (req, res, next) {
 
 });
 
+// ? Query -> phoneNumber
+router.get('/toGive', function (req, res, next) {
+    Transaction.find({ [constants.toGive]: { $elemMatch: { [constants.phoneNumber]: req.query[constants.phoneNumber] } } }).then(function (transactions) {
+        console.log(req.query[constants.phoneNumber]);
+        if (transactions === null) {
+            console.log('Could not find transaction');
+            res.status(404).send('Could not find transaction');
+        } else {
+            res.send(transactions);
+        }
+    }).catch(next);
 
+});
 
 
 
