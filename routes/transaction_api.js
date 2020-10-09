@@ -176,14 +176,23 @@ router.post('/payPerson', function (req, res, next) {
                                 toGet[toGetIndex][constants.amount] -= amount;
                             } else if (toGetAmount < amount) {
                                 toGet.splice(toGetIndex, 1);
-                                toGive.push({ [constants.phoneNumber]: to, [constants.amount]: amount - toGetAmount });
+                                var toGiveIndex = toGive.findIndex(obj => obj[constants.phoneNumber] === to);
+                                if (toGiveIndex !== -1) {
+                                    toGive[toGiveIndex][constants.amount] += amount;
+                                } else
+                                    toGive.push({ [constants.phoneNumber]: to, [constants.amount]: amount - toGetAmount });
                             } else {
                                 toGet.splice(toGetIndex, 1);
                             }
                         } else {
-                            toGive.push({ [constants.phoneNumber]: to, [constants.amount]: amount });
+                            var toGiveIndex = toGive.findIndex(obj => obj[constants.phoneNumber] === to);
+                            if (toGiveIndex !== -1) {
+                                toGive[toGiveIndex][constants.amount] += amount;
+                            } else
+                                toGive.push({ [constants.phoneNumber]: to, [constants.amount]: amount });
                         }
 
+                        //!  REDUCE from toGive the one who is paying
                         var toGiveIndex = toGive.findIndex(obj => obj[constants.phoneNumber] === phoneNumber);
                         if (toGiveIndex !== -1) {
                             if (toGive[toGiveIndex][constants.amount] > amount) {
@@ -222,10 +231,10 @@ router.post('/payPerson', function (req, res, next) {
                         // transaction[constants.got] = got;
                         transaction[constants.given] = given;
 
-                        transaction.markModified(toGet);
-                        transaction.markModified(toGive);
+                        transaction.markModified([constants.toGet]);
+                        transaction.markModified([constants.toGive]);
                         // transaction.markModified(got);
-                        transaction.markModified(given);
+                        transaction.markModified([constants.given]);
 
                         transaction.save(function (error) {
                             if (error) {
