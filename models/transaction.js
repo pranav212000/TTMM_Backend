@@ -24,23 +24,26 @@ TransactionSchema = new Schema({
             // [constants.to]: String,
             [constants.amount]: Number
 
-        }],
-        default: []
-    },
-    [constants.got]: {
-        type: [{
-            [constants.phoneNumber]: String,
-            [constants.from]: String,
-            [constants.amount]: Number
 
         }],
         default: []
     },
+    // [constants.got]: {
+    //     type: [{
+    //         [constants.phoneNumber]: String,
+    //         [constants.from]: String,
+    //         [constants.amount]: Number
+
+    //     }],
+    //     default: []
+    // },
     [constants.given]: {
         type: [{
             [constants.phoneNumber]: String,
             [constants.to]: String,
-            [constants.amount]: Number
+            [constants.amount]: Number,
+            [constants.time]: Date
+
 
         }],
         default: []
@@ -48,8 +51,10 @@ TransactionSchema = new Schema({
     [constants.paid]: {
         type: [{
             [constants.phoneNumber]: String,
-            [constants.paymentMode] : String,
-            [constants.amount]: Number
+            [constants.paymentMode]: String,
+            [constants.amount]: Number,
+            [constants.time]: Date
+
         }],
         default: []
     },

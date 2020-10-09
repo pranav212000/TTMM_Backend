@@ -348,7 +348,7 @@ getEventOrders = function (eventId, callback) {
             if (event === null) {
                 callback({
                     isSuccess: false,
-                    error: 'Could not find event with event id : ' + req.params.eventId,
+                    error: 'Could not find event with event id : ' + eventId,
                     status: 404
                 });
             }

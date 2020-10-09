@@ -42,13 +42,15 @@ router.post('/payBill', function (req, res, next) {
                             paid.push({
                                 [constants.phoneNumber]: body[constants.phoneNumber],
                                 [constants.amount]: body[constants.amount],
-                                [constants.paymentMode]: body[constants.paymentMode]
+                                [constants.paymentMode]: body[constants.paymentMode],
+                                [constants.time]: new Date()
 
                             });
                             transaction[constants.paid] = paid;
                         } else {
                             var paidAmount = paid[paidIndex][constants.amount];
                             paid[paidIndex][constants.amount] = paidAmount + Number.parseInt(body[constants.amount]);
+                            paid[paidIndex][constants.time] = new Date();
                             transaction[constants.paid] = paid;
                         }
                         var toGet = transaction[constants.toGet];
@@ -79,7 +81,10 @@ router.post('/payBill', function (req, res, next) {
                                 });
 
                             } else {
-                                toGive[index][constants.amount] = amount - body[constants.amount];
+                                if (amount - body[constants.amount] === 0)
+                                    toGive.splice(index, 1);
+                                else
+                                    toGive[index][constants.amount] = amount - body[constants.amount];
                             }
                         }
 
@@ -161,7 +166,7 @@ router.post('/payPerson', function (req, res, next) {
 
                         var toGet = transaction[constants.toGet];
                         var toGive = transaction[constants.toGive];
-                        var got = transaction[constants.got];
+                        // var got = transaction[constants.got];
                         var given = transaction[constants.given];
 
                         var toGetIndex = toGet.findIndex(ele => ele[constants.phoneNumber] === to);
@@ -198,20 +203,28 @@ router.post('/payPerson', function (req, res, next) {
                             }
                         }
 
-                        got.push({ [constants.phoneNumber]: to, [constants.from]: phoneNumber, [constants.amount]: amount });
-                        given.push({ [constants.phoneNumber]: phoneNumber, [constants.to]: to, [constants.amount]: amount });
+                        var givenIndex = given.findIndex(obj => obj[constants.phoneNumber] === phoneNumber && obj[constants.to] === to);
+                        if (givenIndex === -1) {
+
+                            given.push({ [constants.phoneNumber]: phoneNumber, [constants.to]: to, [constants.amount]: amount, [constants.time]: new Date() });
+                        }
+                        else {
+                            given[givenIndex][constants.amount] += amount;
+                            given[givenIndex][constants.time] = new Date();
+                        }
+                        // got.push({ [constants.phoneNumber]: to, [constants.from]: phoneNumber, [constants.amount]: amount });
 
 
 
 
                         transaction[constants.toGive] = toGive;
                         transaction[constants.toGet] = toGet;
-                        transaction[constants.got] = got;
+                        // transaction[constants.got] = got;
                         transaction[constants.given] = given;
 
                         transaction.markModified(toGet);
                         transaction.markModified(toGive);
-                        transaction.markModified(got);
+                        // transaction.markModified(got);
                         transaction.markModified(given);
 
                         transaction.save(function (error) {
@@ -302,6 +315,8 @@ router.post('/spiltEvenly', function (req, res, next) {
 
 });
 
+
+// FIXME take got and given into consideration
 // TODO SPLIT BY QUANTITY one orders one roti
 //! Therse split apis are kept so that in case user change the split mode to even to byorder these can be called.
 router.post('/splitByOrder', function (req, res, next) {
@@ -337,71 +352,79 @@ router.post('/splitByOrder', function (req, res, next) {
 
             });
 
-
-
-            Transaction.findOne({ [constants.transactionId]: req.query.transactionId }).then(function (transaction) {
-
-                if (transaction === null) {
-                    console.log('Could not find the transaction');
-                    res.status(404).send({ isSuccess: false, error: 'Could not find the transaction' });
-
+            Event.findOne({ [constants.eventId]: req.query.eventId }).then(function (event) {
+                if (event === null) {
+                    console.log('Could not find event with eventId : ' + req.query.eventId);
+                    res.send({ isSuccess: false, error: 'Could not find event with eventId : ' + req.query.eventId });
                 } else {
 
-                    transaction[constants.totalCost] = transTotal;
-                    var paid = transaction[constants.paid];
-                    var toGet = [];
-                    var toGive = [];
+                    Transaction.findOne({ [constants.transactionId]: event[constants.transactionId] }).then(function (transaction) {
 
-                    members.forEach(member => {
+                        if (transaction === null) {
+                            console.log('Could not find the transaction');
+                            res.status(404).send({ isSuccess: false, error: 'Could not find the transaction' });
 
-                        var result = paid.find(obj => {
-                            return obj[constants.phoneNumber] === member[constants.phoneNumber];
-                        });
-                        var paidAmount;
-                        if (result === undefined) {
-                            paidAmount = 0;
                         } else {
-                            paidAmount = result[constants.amount];
-                        }
-                        if (paidAmount < member[constants.amount]) {
-                            toGive.push({
-                                [constants.phoneNumber]: member[constants.phoneNumber],
-                                [constants.amount]: member[constants.amount] - paidAmount
+
+                            transaction[constants.totalCost] = transTotal;
+                            var paid = transaction[constants.paid];
+                            var toGet = [];
+                            var toGive = [];
+
+                            members.forEach(member => {
+
+                                var result = paid.find(obj => {
+                                    return obj[constants.phoneNumber] === member[constants.phoneNumber];
+                                });
+                                var paidAmount;
+                                if (result === undefined) {
+                                    paidAmount = 0;
+                                } else {
+                                    paidAmount = result[constants.amount];
+                                }
+                                if (paidAmount < member[constants.amount]) {
+                                    toGive.push({
+                                        [constants.phoneNumber]: member[constants.phoneNumber],
+                                        [constants.amount]: member[constants.amount] - paidAmount
+                                    });
+                                }
+                                else if (paidAmount > member[constants.amount]) {
+                                    toGet.push({
+                                        [constants.phoneNumber]: member[constants.phoneNumber],
+                                        [constants.amount]: paidAmount - member[constants.amount]
+                                    });
+                                }
+
                             });
+
+
+                            transaction[constants.toGive] = toGive;
+                            transaction[constants.toGet] = toGet;
+                            transaction[constants.split] = constants.byOrder;
+
+
+                            transaction.markModified([constants.totalCost]);
+                            transaction.markModified([constants.toGive]);
+                            transaction.markModified([constants.toGet]);
+                            transaction.markModified([constants.split]);
+
+                            transaction.save(function (error) {
+                                if (error) {
+                                    console.log(error);
+                                    res.status(500).send({ isSuccess: false, error: error });
+                                } else {
+                                    res.send(transaction);
+                                }
+                            })
+
                         }
-                        else if (paidAmount > member[constants.amount]) {
-                            toGet.push({
-                                [constants.phoneNumber]: member[constants.phoneNumber],
-                                [constants.amount]: paidAmount - member[constants.amount]
-                            });
-                        }
+
 
                     });
 
-
-                    transaction[constants.toGive] = toGive;
-                    transaction[constants.toGet] = toGet;
-                    transaction[constants.split] = constants.byOrder;
-
-
-                    transaction.markModified([constants.totalCost]);
-                    transaction.markModified([constants.toGive]);
-                    transaction.markModified([constants.toGet]);
-                    transaction.markModified([constants.split]);
-
-                    transaction.save(function (error) {
-                        if (error) {
-                            console.log(error);
-                            res.status(500).send({ isSuccess: false, error: error });
-                        } else {
-                            res.send(transaction);
-                        }
-                    })
-
                 }
+            }).catch(next);
 
-
-            });
 
         }
     })

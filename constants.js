@@ -38,6 +38,7 @@ var constants = {
     from: 'from',
     to: 'to',
     amount: 'amount',
+    time: 'time',
     totalPaid: 'totalPaid',                  //Bill total amount paid 
     paymentMode: 'paymentMode',
     cash: 'cash',
