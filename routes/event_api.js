@@ -71,6 +71,23 @@ var getEvent = function (eventId) {
     })
 }
 
+
+var getEventByTransactionId = function (transactionId) {
+    return new Promise(function (resolve, reject) {
+        Event.findOne({ [constants.transactionId]: transactionId }, function (error, event) {
+            if (error) {
+                console.log(error);
+                reject(error);
+            } else {
+                if (event === null)
+                    reject({ message: 'Event NOT FOUND!' });
+                else
+                    resolve(event);
+            }
+        });
+    });
+}
+
 // TODO get events by group id!!
 
 router.get('/multiple', function (req, res, next) {
@@ -368,4 +385,4 @@ getEventOrders = function (eventId, callback) {
 };
 
 
-module.exports = { router: router, getEventOrders: getEventOrders, getEvent: getEvent };
+module.exports = { router: router, getEventOrders: getEventOrders, getEvent: getEvent, getEventByTransactionId: getEventByTransactionId };

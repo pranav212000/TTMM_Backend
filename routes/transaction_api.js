@@ -11,12 +11,31 @@ const getEventOrders = require('./event_api').getEventOrders;
 
 const router = express.Router();
 
+// Get toGet of a transaction
+router.get('/allToGets', function (req, res, next) {
+    var eventId = req.query.eventId;
+    Event.findOne({ [constants.eventId]: eventId }).then(function (event) {
+        if (event === null) {
+            console.log('Could not find the event with eventId: ' + eventId);
+            res.status(404).send({ isSuccess: false, error: 'Could not find the event with eventId: ' + eventId });
+        } else {
 
-// router.post('/addTransaction', function (req, res, next) {
-//     Transaction.create().then(function (transaction) {
-//         res.send(transaction);
-//     }).catch(next);
-// });
+            var transactionId = event[constants.transactionId];
+
+            Transaction.findOne({ [constants.transactionId]: transactionId }).then(function (transaction) {
+                if (transaction === null) {
+                    console.log('Could not find the transaction with transactionId : ' + transactionId);
+                    res.status(404).send({ isSuccess: false, error: 'Could not find the transaction with transactionId : ' + transactionId });
+                } else {
+                    console.log(transaction);
+                    var toGet = transaction[constants.toGet];
+                    res.send(toGet);
+                }
+            }).catch(next);
+        }
+    }).catch(next);
+});
+
 
 router.post('/payBill', function (req, res, next) {
     var body = req.body;

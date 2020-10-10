@@ -3,8 +3,9 @@ const User = require('../models/user');
 const Group = require('../models/group');
 const Order = require('../models/order');
 const constants = require('../constants');
-const { uid, cost } = require('../constants');
+const { uid, cost, toGive, got } = require('../constants');
 const Transaction = require('../models/transaction');
+const getEventByTransactionId = require('./event_api').getEventByTransactionId;
 const router = express.Router();
 
 
@@ -105,6 +106,7 @@ router.get('/syncContacts', function (req, res, next) {
 });
 
 // ? Query -> phoneNumber
+//! get users to Gives  --> how much amount should the user give
 router.get('/toGive', function (req, res, next) {
     Transaction.find({ [constants.toGive]: { $elemMatch: { [constants.phoneNumber]: req.query[constants.phoneNumber] } } }).then(function (transactions) {
         console.log(req.query[constants.phoneNumber]);
@@ -112,11 +114,33 @@ router.get('/toGive', function (req, res, next) {
             console.log('Could not find transaction');
             res.status(404).send('Could not find transaction');
         } else {
-            res.send(transactions);
+            // res.send(transactions);
+            var toGives = [];
+            // var transactionids = transactions.map(transaction => transaction[constants.transactionId]);
+
+            var toSend = 0;
+            transactions.forEach(transaction => {
+                getEventByTransactionId(transaction[constants.transactionId])
+                    .then(event => {
+                        toGives.push({
+                            [constants.eventName]: event[constants.eventName],
+                            [constants.eventId]: event[constants.eventId],
+                            [constants.toGive]: transaction[constants.toGive].filter(obj => obj[constants.phoneNumber] === req.query[constants.phoneNumber])
+                        });
+                        toSend += 1;
+                        if (toSend === transactions.length) {
+                            send(res, toGives);
+                        }
+                    });
+            });
         }
     }).catch(next);
-
 });
+
+
+function send(res, response) {
+    res.send(response);
+}
 
 router.get('/toGet', function (req, res, next) {
     Transaction.find({ [constants.toGet]: { $elemMatch: { [constants.phoneNumber]: req.query[constants.phoneNumber] } } }).then(function (transactions) {
@@ -125,11 +149,99 @@ router.get('/toGet', function (req, res, next) {
             console.log('Could not find transaction');
             res.status(404).send('Could not find transaction');
         } else {
-            res.send(transactions);
+            // res.send(transactions);
+            var toGets = [];
+            // var transactionids = transactions.map(transaction => transaction[constants.transactionId]);
+
+            var toSend = 0;
+            transactions.forEach(transaction => {
+                getEventByTransactionId(transaction[constants.transactionId])
+                    .then(event => {
+                        toGets.push({
+                            [constants.eventName]: event[constants.eventName],
+                            [constants.eventId]: event[constants.eventId],
+                            [constants.toGet]: transaction[constants.toGet].filter(obj => obj[constants.phoneNumber] === req.query[constants.phoneNumber])
+                        });
+                        toSend += 1;
+                        if (toSend === transactions.length) {
+                            send(res, toGets);
+                        }
+                    });
+            });
         }
     }).catch(next);
 });
 
+// TODO test all this toGet, toGive, got, given, payPerson! and maybe payBill too. Lots of mess in here :/
+router.get('/given', function (req, res, next) {
+    Transaction.find({ [constants.given]: { $elemMatch: { [constants.phoneNumber]: req.query[constants.phoneNumber] } } }).then(function (transactions) {
+        console.log(req.query[constants.phoneNumber]);
+        if (transactions === null) {
+            console.log('Could not find transaction');
+            res.status(404).send('Could not find transaction');
+        } else {
+            var givens = [];
+
+            var toSend = 0;
+            transactions.forEach(transaction => {
+                getEventByTransactionId(transaction[constants.transactionId])
+                    .then(event => {
+                        givens.push({
+                            [constants.eventName]: event[constants.eventName],
+                            [constants.eventId]: event[constants.eventId],
+                            [constants.given]: transaction[constants.given].filter(obj => obj[constants.phoneNumber] === req.query[constants.phoneNumber])
+                        });
+                        toSend += 1;
+                        if (toSend === transactions.length) {
+                            send(res, givens);
+                        }
+                    });
+            });
+        }
+    }).catch(next);
+});
+
+
+
+router.get('/got', function (req, res, next) {
+    Transaction.find({ [constants.given]: { $elemMatch: { [constants.phoneNumber]: req.query[constants.phoneNumber] } } }).then(function (transactions) {
+        console.log(req.query[constants.phoneNumber]);
+        if (transactions === null) {
+            console.log('Could not find transaction');
+            res.status(404).send('Could not find transaction');
+        } else {
+
+            var gots = [];
+            var toSend = 0;
+            transactions.forEach(transaction => {
+                getEventByTransactionId(transaction[constants.transactionId])
+                    .then(event => {
+                        var givens = transaction[constants.given];
+                        var got = [];
+                        givens.forEach(given => {
+                            got.push({
+                                [constants.phoneNumber]: given[constants.to],
+                                [constants.from]: given[constants.phoneNumber],
+                                [constants.amount]: given[constants.amount]
+                            });
+
+                        });
+                        gots.push({
+                            [constants.eventName]: event[constants.eventName],
+                            [constants.eventId]: event[constants.eventId],
+                            [constants.got]: got.filter(obj => obj[constants.phoneNumber] === req.query[constants.phoneNumber])
+
+                        });
+
+                        toSend += 1;
+                        if (toSend === transactions.length) {
+                            send(res, gots);
+                        }
+                    });
+            });
+        }
+    }).catch(next);
+});
 
 
 
