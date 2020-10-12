@@ -4,7 +4,7 @@ const constants = require('../constants');
 const User = require('../models/user');
 const { model } = require('mongoose');
 const Group = require('../models/group');
-const { eventId, toGet, split, amount, totalCost } = require('../constants');
+const { eventId, toGet, split, amount, totalCost, phoneNumber } = require('../constants');
 const getOrder = require('./order_api').getOrder;
 const Transaction = require('../models/transaction');
 const router = express.Router();
@@ -103,10 +103,39 @@ router.get('/multiple', function (req, res, next) {
 // Add new order also check if exists and update if already exists!
 router.post('/:eventId/addOrder', function (req, res, next) {
 
-    Order.create(req.body).then(function (order) {
-        addOrderToEvent(order, req.params.eventId, res);
+    Order.findOne({
+        [constants.itemName]: req.body[constants.itemName],
+        [constants.eventId]: req.params.eventId,
+        [constants.cost]: req.body[constants.cost]
+    }).then(function (order) {
+        if (order === null) {
+            Order.create(req.body).then(function (order) {
+                addOrderToEvent(order, req.params.eventId, res);
 
-    }).catch(next);
+            }).catch(next);
+        } else {
+            order[constants.quantity] += req.body[constants.quantity];
+            order[constants.totalCost] += req.body[constants.totalCost];
+            var phoneNumbers = order[constants.phoneNumber];
+            order[constants.phoneNumber].push({ [constants.phoneNumber]: phoneNumbers[0] });
+
+            order.markModified([constants.quantity]);
+            order.markModified([constants.totalCost]);
+            order.markModified([constants.phoneNumber]);
+
+
+            order.save(function (error) {
+                if (error) {
+                    console.log(error);
+                    res.status(500).send({ isSuccess: false, error: error });
+                } else {
+                    res.send({ 'order': order });
+                }
+            });
+        }
+    })
+
+
 
 
 
