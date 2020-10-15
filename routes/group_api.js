@@ -78,6 +78,17 @@ router.get('/:groupId/events', function (req, res, next) {
 });
 
 
+router.get(':groupId/members', function (req, res, next) {
+    Group.findOne({ [constants.groupId]: req.params.groupId }).then(function (group) {
+        if (group === null) {
+            console.log('Could not find the group');
+            res.status(404).send({ isSuccess: false, error: "Could not find the group" });
+        } else {
+            res.send(group[constants.groupMembers]);
+        }
+    }).catch(next);
+});
+
 
 getGroupEvents = function (groupId, callback) {
     Group.findOne({ [constants.groupId]: groupId }, function (error, group) {
