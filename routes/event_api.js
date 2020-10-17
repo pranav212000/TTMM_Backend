@@ -239,7 +239,6 @@ function addToTransaction(event, order, isNew, res) {
             console.log('Could not find group having event : ' + event[constants.eventId]);
             res.status(404).send({ isSuccess: false, error: 'Could not find the group having event : ' + event[constants.eventId] });
         } else {
-            var members = group[constants.groupMembers];
 
             Transaction.findOne({ [constants.transactionId]: event[constants.transactionId] })
                 .then(function (transaction) {
@@ -247,6 +246,8 @@ function addToTransaction(event, order, isNew, res) {
                         console.log('Could not find transaction with id: ' + event[constants.transactionId]);
                         res.status(404).send({ isSuccess: false, error: 'Could not find transaction with id: ' + event[constants.transactionId] })
                     } else {
+                        var members = group[constants.groupMembers];
+
                         transaction[totalCost] += order[constants.totalCost];
 
                         var splitType = transaction[constants.split];
