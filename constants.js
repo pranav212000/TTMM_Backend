@@ -4,6 +4,7 @@ var constants = {
     phoneNumber: 'phoneNumber',
     groups: 'groups',
     profileUrl: 'profileUrl',
+    upiId: 'upiId',
 
     groupId: 'groupId',
     groupName: 'groupName',
@@ -18,8 +19,9 @@ var constants = {
     eventName: 'eventName',
     orders: 'orders',
     finalOrder: 'finalOrder',
+    event: 'event',
 
-
+    order: 'order',
     orderId: 'orderId',
     itemName: 'itemName',
     quantity: 'quantity',

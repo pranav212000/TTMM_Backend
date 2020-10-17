@@ -11,6 +11,7 @@ UserSchema = new Schema({
     [constants.phoneNumber]: { type: String, required: [true, 'Phone numeber is required'] },
     [constants.groups]: { type: [String], default: [] },
     [constants.profileUrl]: { type: String, default: "https://firebasestorage.googleapis.com/v0/b/ttmm-d9b4f.appspot.com/o/placeholders%2Fprofile_placeholder.jpg?alt=media&token=1cd39587-5053-47ee-a575-5aede7eddc9b" },
+    [constants.upiId] : String,
 
 });
 

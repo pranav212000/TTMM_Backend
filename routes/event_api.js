@@ -53,6 +53,22 @@ router.get('/', function (req, res, next) {
     }).catch(next);
 });
 
+var getEventByOrder = function (order) {
+    return new Promise(function (resolve, reject) {
+        Event.findOne({ [constants.eventId]: order[constants.eventId] }, function (error, event) {
+            if (error) {
+                console.log(error);
+                reject(error);
+            } else {
+                if (event === null)
+                    resolve({ message: 'Event NOT FOUND!' });
+                else
+                    resolve(event);
+            }
+        });
+    });
+}
+
 
 
 var getEvent = function (eventId) {
@@ -414,4 +430,10 @@ getEventOrders = function (eventId, callback) {
 };
 
 
-module.exports = { router: router, getEventOrders: getEventOrders, getEvent: getEvent, getEventByTransactionId: getEventByTransactionId };
+module.exports = {
+    router: router, getEventOrders: getEventOrders,
+    getEvent: getEvent,
+    getEventByTransactionId: getEventByTransactionId,
+    getEventByOrder: getEventByOrder
+
+};

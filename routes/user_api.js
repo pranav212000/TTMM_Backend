@@ -5,7 +5,9 @@ const Order = require('../models/order');
 const constants = require('../constants');
 const { uid, cost, toGive, got } = require('../constants');
 const Transaction = require('../models/transaction');
+const { getEvent } = require('./event_api');
 const getEventByTransactionId = require('./event_api').getEventByTransactionId;
+const getEventByOrder = require('./event_api').getEventByOrder;
 const router = express.Router();
 
 
@@ -33,8 +35,8 @@ router.get('/', function (req, res, next) {
 
 
 // Check if user is present or not      if present -> true
-router.get('/checkUser/:uid', function (req, res, next) {
-    User.find({ [constants.uid]: req.params.uid }).count().then(function (cnt) {
+router.get('/checkUser/:phoneNumber', function (req, res, next) {
+    User.find({ [constants.phoneNumber]: req.params.phoneNumber }).count().then(function (cnt) {
         if (cnt === 0)
             res.send(false);
         else
@@ -69,9 +71,24 @@ router.get('/multiple', function (req, res, next) {
 
 
 // Get user groups
-router.get('/:uid/orders', function (req, res, next) {
-    Order.find({ [constants.uid]: req.params.uid }).then(function (orders) {
-        res.send(orders);
+router.get('/orders', function (req, res, next) {
+    Order.find({ [constants.phoneNumber]: req.query.phoneNumber }).then(function (orders) {
+
+        var getEventsForOrders = new Promise(function (resolve, reject) {
+            var body = [];
+            orders.forEach((order, index, array) => {
+                getEvent(order[constants.eventId]).then(function (event) {
+                    body.push({ [constants.order]: order, [constants.event]: event });
+                    if (index === orders.length -1)
+                        resolve(body);
+                }).catch(error => reject(error));
+            });
+
+        })
+
+        getEventsForOrders.then(function (body) {
+            res.send(body);
+        }).catch(error => res.status(500).send({ isSuccess: false, error: error }));
     }).catch(next);
 });
 
