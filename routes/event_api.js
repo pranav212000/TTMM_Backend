@@ -133,7 +133,7 @@ router.post('/:eventId/addOrder', function (req, res, next) {
             order[constants.quantity] += req.body[constants.quantity];
             order[constants.totalCost] += req.body[constants.totalCost];
             var phoneNumbers = order[constants.phoneNumber];
-            order[constants.phoneNumber].push({ [constants.phoneNumber]: phoneNumbers[0] });
+            order[constants.phoneNumber].push(phoneNumbers[0]);
 
             order.markModified([constants.quantity]);
             order.markModified([constants.totalCost]);
