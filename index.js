@@ -12,7 +12,7 @@ app.set('view engine', 'ejs');
 
 // TODO check one before upload
 // Connect to mongoDB local host
-mongoose.connect('mongodb://localhost/ttmm', { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, useFindAndModify: false });
+// mongoose.connect('mongodb://localhost/ttmm', { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, useFindAndModify: false });
 // Connect to mongoDB atlas
 
 
@@ -25,7 +25,7 @@ mongoose.connect('mongodb://localhost/ttmm', { useNewUrlParser: true, useUnified
 // Yeh karke dikhao
 // Chalo yeh karke dikhao 
 //  - YO YO HONEY SINGH ft. me ;)
-// mongoose.connect(process.env.DBURL, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, useFindAndModify: false });
+mongoose.connect(process.env.DBURL, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, useFindAndModify: false });
 
 
 mongoose.Promise = global.Promise;
