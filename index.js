@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
-
+require('dotenv').config()
 
 
 // Set up express app
@@ -12,7 +12,7 @@ app.set('view engine', 'ejs');
 
 // TODO check one before upload
 // Connect to mongoDB local host
-// mongoose.connect('mongodb://localhost/ttmm', { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, useFindAndModify: false });
+mongoose.connect('mongodb://localhost/ttmm', { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, useFindAndModify: false });
 // Connect to mongoDB atlas
 
 
@@ -25,7 +25,7 @@ app.set('view engine', 'ejs');
 // Yeh karke dikhao
 // Chalo yeh karke dikhao 
 //  - YO YO HONEY SINGH ft. me ;)
-mongoose.connect(process.env.DBURL, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, useFindAndModify: false });
+// mongoose.connect(process.env.DBURL, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, useFindAndModify: false });
 
 
 mongoose.Promise = global.Promise;
@@ -41,6 +41,7 @@ app.use('/api/group', require('./routes/group_api'));
 app.use('/api/event', require('./routes/event_api').router);
 app.use('/api/order', require('./routes/order_api').router);
 app.use('/api/transaction', require('./routes/transaction_api'));
+app.use('/api/firebase', require('./routes/firebase_api'));
 
 app.get('/', function (req, res) {
     res.render('home');
@@ -56,3 +57,24 @@ app.use(function (err, req, res, next) {
 app.listen(process.env.PORT || 4000, function () {
     console.log('Listening for requests');
 });
+
+
+
+// var admin = require("firebase-admin");
+
+// var serviceAccount = require("path/to/serviceAccountKey.json");
+
+// admin.initializeApp({
+//   credential: admin.credential.cert(serviceAccount),
+//   databaseURL: "https://ttmm-d9b4f.firebaseio.com"
+// });
+
+
+// var admin = require("firebase-admin");
+
+// var serviceAccount = require("path/to/serviceAccountKey.json");
+
+// admin.initializeApp({
+//   credential: admin.credential.cert(serviceAccount),
+//   databaseURL: "https://ttmm-d9b4f.firebaseio.com"
+// });
