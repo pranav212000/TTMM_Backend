@@ -44,8 +44,12 @@ var constants = {
     totalPaid: 'totalPaid',                  //Bill total amount paid 
     paymentMode: 'paymentMode',
     cash: 'cash',
-    upi: 'upi'
+    upi: 'upi',
 
+    token: 'token',
+    partial: 'partial',
+    paymentId: 'paymentId',
+    notGot: 'notGot'
 
 
 

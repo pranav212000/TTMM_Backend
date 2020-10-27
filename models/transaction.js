@@ -21,10 +21,7 @@ TransactionSchema = new Schema({
     [constants.toGive]: {
         type: [{
             [constants.phoneNumber]: String,
-            // [constants.to]: String,
             [constants.amount]: Number
-
-
         }],
         default: []
     },
@@ -42,7 +39,8 @@ TransactionSchema = new Schema({
             [constants.phoneNumber]: String,
             [constants.to]: String,
             [constants.amount]: Number,
-            [constants.time]: Date
+            [constants.time]: Date,
+            [constants.paymentMode] : String
 
 
         }],

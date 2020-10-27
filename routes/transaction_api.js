@@ -4,6 +4,7 @@ const constants = require('../constants');
 const User = require('../models/user');
 const { model } = require('mongoose');
 const Group = require('../models/group');
+const Cash = require('../models/cash');
 const { eventId, totalPaid, phoneNumber, toGet, toGive } = require('../constants');
 const Transaction = require('../models/transaction');
 const getOrder = require('./order_api').getOrder;
@@ -158,6 +159,9 @@ router.post('/payBill', function (req, res, next) {
         }
     });
 });
+
+
+
 
 
 
