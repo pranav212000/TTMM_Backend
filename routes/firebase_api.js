@@ -65,6 +65,8 @@ router.post('/sendCashConfirmation', function (req, res, next) {
                             }, "data": {
                                 "title": "Cash Confirmation",
                                 "body": dataBody,
+                                "phoneNumber": cash[constants.phoneNumber],
+                                "amount": cash[constants.amount].toString(),
                                 "to": cash[constants.to],
                                 "eventId": cash[constants.eventId],
                                 "reconfirmation": "false",
@@ -111,6 +113,8 @@ router.post('/sendCashConfirmation', function (req, res, next) {
                                     }, "data": {
                                         "title": "Cash Reconfirmation",
                                         "body": dataBody,
+                                        "phoneNumber": cash[constants.phoneNumber],
+                                        "amount": cash[constants.amount].toString(),
                                         "to": cash[constants.to],
                                         "eventId": cash[constants.eventId],
                                         "reconfirmation": "true",
@@ -169,6 +173,8 @@ router.post('/notGotCash', function (req, res, next) {
                                 }, "data": {
                                     "title": "Cash not received",
                                     "body": payloadBody,
+                                    "phoneNumber": cash[constants.phoneNumber],
+                                    "amount": cash[constants.amount].toString(),
                                     "to": cash[constants.to],
                                     "eventId": cash[constants.eventId],
                                     "reconfirmation": "false",

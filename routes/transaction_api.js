@@ -186,7 +186,7 @@ router.post('/payPerson', function (req, res, next) {
                         var phoneNumber = body[constants.phoneNumber];
                         var to = body[constants.to];
                         var amount = body[constants.amount];
-                        var mode = body[constants.mode];
+                        var paymentMode = body[constants.paymentMode];
                         var toGet = transaction[constants.toGet];
                         var toGive = transaction[constants.toGive];
                         // var got = transaction[constants.got];
@@ -238,7 +238,7 @@ router.post('/payPerson', function (req, res, next) {
                         var givenIndex = given.findIndex(obj => obj[constants.phoneNumber] === phoneNumber && obj[constants.to] === to);
                         if (givenIndex === -1) {
 
-                            given.push({ [constants.phoneNumber]: phoneNumber, [constants.to]: to, [constants.amount]: amount, [constants.time]: new Date(), [constants.mode] : mode });
+                            given.push({ [constants.phoneNumber]: phoneNumber, [constants.to]: to, [constants.amount]: amount, [constants.time]: new Date(), [constants.paymentMode] : paymentMode });
                         }
                         else {
                             given[givenIndex][constants.amount] += amount;
