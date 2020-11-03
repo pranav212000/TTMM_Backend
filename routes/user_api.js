@@ -73,22 +73,25 @@ router.get('/multiple', function (req, res, next) {
 // Get user groups
 router.get('/orders', function (req, res, next) {
     Order.find({ [constants.phoneNumber]: req.query.phoneNumber }).then(function (orders) {
+        if (orders === null || orders.length === 0) {
+            res.send(orders);
+        } else {
+            var getEventsForOrders = new Promise(function (resolve, reject) {
+                var body = [];
+                orders.forEach((order, index, array) => {
+                    getEvent(order[constants.eventId]).then(function (event) {
+                        body.push({ [constants.order]: order, [constants.event]: event });
+                        if (index === orders.length - 1)
+                            resolve(body);
+                    }).catch(error => reject(error));
+                });
 
-        var getEventsForOrders = new Promise(function (resolve, reject) {
-            var body = [];
-            orders.forEach((order, index, array) => {
-                getEvent(order[constants.eventId]).then(function (event) {
-                    body.push({ [constants.order]: order, [constants.event]: event });
-                    if (index === orders.length -1)
-                        resolve(body);
-                }).catch(error => reject(error));
-            });
+            })
 
-        })
-
-        getEventsForOrders.then(function (body) {
-            res.send(body);
-        }).catch(error => res.status(500).send({ isSuccess: false, error: error }));
+            getEventsForOrders.then(function (body) {
+                res.send(body);
+            }).catch(error => res.status(500).send({ isSuccess: false, error: error }));
+        }
     }).catch(next);
 });
 

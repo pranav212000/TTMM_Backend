@@ -52,22 +52,24 @@ router.post('/sendCashConfirmation', function (req, res, next) {
                         console.log('Could not find user for number : ' + cash[constants.phoneNumber]);
                         res.status(404).send({ isSuccess: false, error: 'Could not find user for number : ' + cash[constants.phoneNumber] });
                     } else {
-                        var payloadBody = "You have a cash payment confirmation from " + user[constants.name] + " for amount " + cash[constants.amount];
+                        var notificationBody = "You have a cash payment confirmation from " + user[constants.name] + " for amount " + cash[constants.amount];
+                        var dataBody = "Have you received \u20B9" + cash[constants.amount] + " from " + user[constants.name] + " in cash?"
                         const payload = {
 
                             "notification": {
-                                "body": payloadBody,
+                                "body": notificationBody,
                                 "title": "Cash Confirmation",
                                 "click_action": "FLUTTER_NOTIFICATION_CLICK",
                                 visibility: "public",
                                 sound: 'default'
                             }, "data": {
-                                "title": "From POSTMAN",
-                                "body": "Foreground message",
+                                "title": "Cash Confirmation",
+                                "body": dataBody,
                                 "to": cash[constants.to],
                                 "eventId": cash[constants.eventId],
                                 "reconfirmation": "false",
-                                [constants.paymentId]: cash[constants.paymentId]
+                                [constants.paymentId]: cash[constants.paymentId],
+                                "showDialog": "true"
                             },
 
                         }
@@ -95,22 +97,26 @@ router.post('/sendCashConfirmation', function (req, res, next) {
                             } else {
 
                                 var payloadBody = "You have a cash payment reconfirmation from " + user[constants.name] + " for amount " + cash[constants.amount];
+                                var dataBody = "Have you received \u20B9" + cash[constants.amount] + " from " + user[constants.name] + " in cash?"
+
                                 const payload = {
 
                                     "notification": {
                                         "body": payloadBody,
-                                        "title": "Cash Confirmation",
+                                        "title": "Cash Reconfirmation",
                                         "click_action": "FLUTTER_NOTIFICATION_CLICK",
                                         visibility: "public",
                                         priority: "high",
                                         sound: 'default'
                                     }, "data": {
-                                        "title": "From POSTMAN",
-                                        "body": "Foreground message",
+                                        "title": "Cash Reconfirmation",
+                                        "body": dataBody,
                                         "to": cash[constants.to],
                                         "eventId": cash[constants.eventId],
                                         "reconfirmation": "true",
-                                        [constants.paymentId]: cash[constants.paymentId]
+                                        [constants.paymentId]: cash[constants.paymentId],
+                                        "showDialog": "true"
+
                                     },
 
                                 }
@@ -132,6 +138,7 @@ router.post('/sendCashConfirmation', function (req, res, next) {
 router.post('/notGotCash', function (req, res, next) {
     Cash.findOne({ [constants.paymentId]: req.query[constants.paymentId] }).then(function (cash) {
         if (cash === null) {
+            console.log('Could not find the payment id');
             res.status(404).send({ isSuccess: false, error: 'Could not find the payment' });
         } else {
             cash[constants.got] = constants.notGot;
@@ -149,21 +156,25 @@ router.post('/notGotCash', function (req, res, next) {
                         } else {
 
                             var payloadBody = user[constants.name] + " HAS NOT RECIEVED YOUR CASH" + " for amount " + cash[constants.amount];
+                            var dataBody = "Have you received \u20B9" + cash[constants.amount] + " from " + user[constants.name] + " in cash?"
+
                             const payload = {
 
                                 "notification": {
                                     "body": payloadBody,
-                                    "title": "Cash Confirmation",
+                                    "title": "Cash not received",
                                     "click_action": "FLUTTER_NOTIFICATION_CLICK",
                                     visibility: "public",
                                     sound: 'default'
                                 }, "data": {
-                                    "title": "From POSTMAN",
-                                    "body": "Foreground message",
+                                    "title": "Cash not received",
+                                    "body": payloadBody,
                                     "to": cash[constants.to],
                                     "eventId": cash[constants.eventId],
                                     "reconfirmation": "false",
-                                    [constants.paymentId]: cash[constants.paymentId]
+                                    [constants.paymentId]: cash[constants.paymentId],
+                                    "showDialog": "true"
+
                                 },
                             }
                             sendNotification(cash[constants.phoneNumber], payload, res);

@@ -45,6 +45,7 @@ var constants = {
     paymentMode: 'paymentMode',
     cash: 'cash',
     upi: 'upi',
+    mode: 'mode',
 
     token: 'token',
     partial: 'partial',
