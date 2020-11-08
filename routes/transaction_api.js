@@ -238,7 +238,7 @@ router.post('/payPerson', function (req, res, next) {
                         var givenIndex = given.findIndex(obj => obj[constants.phoneNumber] === phoneNumber && obj[constants.to] === to);
                         if (givenIndex === -1) {
 
-                            given.push({ [constants.phoneNumber]: phoneNumber, [constants.to]: to, [constants.amount]: amount, [constants.time]: new Date(), [constants.paymentMode] : paymentMode });
+                            given.push({ [constants.phoneNumber]: phoneNumber, [constants.to]: to, [constants.amount]: amount, [constants.time]: new Date(), [constants.paymentMode]: paymentMode });
                         }
                         else {
                             given[givenIndex][constants.amount] += amount;
@@ -264,6 +264,19 @@ router.post('/payPerson', function (req, res, next) {
                                 console.log(error);
                                 res.status(500).send({ isSuccess: false, error: error });
                             } else {
+                                if (paymentMode === constants.cash) {
+                                    Cash.findOne({ [constants.paymentId]: body[constants.paymentId] }).then(function (cash) {
+                                        cash[constants.got] = 'true';
+                                        cash.markModified([constants.got]);
+                                        cash.save(function (error) {
+                                            if (error) {
+                                                console.log(error);
+                                            } else {
+                                                console.log(cash);
+                                            }
+                                        })
+                                    })
+                                }
                                 res.send(transaction);
                             }
                         });
