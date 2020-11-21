@@ -138,21 +138,26 @@ router.get('/toGive', function (req, res, next) {
             var toGives = [];
             // var transactionids = transactions.map(transaction => transaction[constants.transactionId]);
 
-            var toSend = 0;
-            transactions.forEach(transaction => {
-                getEventByTransactionId(transaction[constants.transactionId])
-                    .then(event => {
-                        toGives.push({
-                            [constants.eventName]: event[constants.eventName],
-                            [constants.eventId]: event[constants.eventId],
-                            [constants.toGive]: transaction[constants.toGive].filter(obj => obj[constants.phoneNumber] === req.query[constants.phoneNumber])
+            console.log(transactions.length);
+            if (transactions.length === 0) {
+                res.send([]);
+            } else {
+                var toSend = 0;
+                transactions.forEach(transaction => {
+                    getEventByTransactionId(transaction[constants.transactionId])
+                        .then(event => {
+                            toGives.push({
+                                [constants.eventName]: event[constants.eventName],
+                                [constants.eventId]: event[constants.eventId],
+                                [constants.toGive]: transaction[constants.toGive].filter(obj => obj[constants.phoneNumber] === req.query[constants.phoneNumber])
+                            });
+                            toSend += 1;
+                            if (toSend === transactions.length) {
+                                send(res, toGives);
+                            }
                         });
-                        toSend += 1;
-                        if (toSend === transactions.length) {
-                            send(res, toGives);
-                        }
-                    });
-            });
+                });
+            }
         }
     }).catch(next);
 });
@@ -174,20 +179,24 @@ router.get('/toGet', function (req, res, next) {
             // var transactionids = transactions.map(transaction => transaction[constants.transactionId]);
 
             var toSend = 0;
-            transactions.forEach(transaction => {
-                getEventByTransactionId(transaction[constants.transactionId])
-                    .then(event => {
-                        toGets.push({
-                            [constants.eventName]: event[constants.eventName],
-                            [constants.eventId]: event[constants.eventId],
-                            [constants.toGet]: transaction[constants.toGet].filter(obj => obj[constants.phoneNumber] === req.query[constants.phoneNumber])
+            if (transactions.length === 0) {
+                res.send([]);
+            } else {
+                transactions.forEach(transaction => {
+                    getEventByTransactionId(transaction[constants.transactionId])
+                        .then(event => {
+                            toGets.push({
+                                [constants.eventName]: event[constants.eventName],
+                                [constants.eventId]: event[constants.eventId],
+                                [constants.toGet]: transaction[constants.toGet].filter(obj => obj[constants.phoneNumber] === req.query[constants.phoneNumber])
+                            });
+                            toSend += 1;
+                            if (toSend === transactions.length) {
+                                send(res, toGets);
+                            }
                         });
-                        toSend += 1;
-                        if (toSend === transactions.length) {
-                            send(res, toGets);
-                        }
-                    });
-            });
+                });
+            }
         }
     }).catch(next);
 });
@@ -222,7 +231,7 @@ router.get('/given', function (req, res, next) {
 });
 
 
-
+// FIXME
 router.get('/got', function (req, res, next) {
     Transaction.find({ [constants.given]: { $elemMatch: { [constants.phoneNumber]: req.query[constants.phoneNumber] } } }).then(function (transactions) {
         console.log(req.query[constants.phoneNumber]);
