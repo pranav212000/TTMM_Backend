@@ -212,28 +212,31 @@ router.get('/given', function (req, res, next) {
             var givens = [];
 
             var toSend = 0;
-            transactions.forEach(transaction => {
-                getEventByTransactionId(transaction[constants.transactionId])
-                    .then(event => {
-                        givens.push({
-                            [constants.eventName]: event[constants.eventName],
-                            [constants.eventId]: event[constants.eventId],
-                            [constants.given]: transaction[constants.given].filter(obj => obj[constants.phoneNumber] === req.query[constants.phoneNumber])
+            if (transactions.length === 0) {
+                res.send([]);
+            } else {
+                transactions.forEach(transaction => {
+                    getEventByTransactionId(transaction[constants.transactionId])
+                        .then(event => {
+                            givens.push({
+                                [constants.eventName]: event[constants.eventName],
+                                [constants.eventId]: event[constants.eventId],
+                                [constants.given]: transaction[constants.given].filter(obj => obj[constants.phoneNumber] === req.query[constants.phoneNumber])
+                            });
+                            toSend += 1;
+                            if (toSend === transactions.length) {
+                                send(res, givens);
+                            }
                         });
-                        toSend += 1;
-                        if (toSend === transactions.length) {
-                            send(res, givens);
-                        }
-                    });
-            });
+                });
+            }
         }
     }).catch(next);
 });
 
 
-// FIXME
 router.get('/got', function (req, res, next) {
-    Transaction.find({ [constants.given]: { $elemMatch: { [constants.phoneNumber]: req.query[constants.phoneNumber] } } }).then(function (transactions) {
+    Transaction.find({ [constants.given]: { $elemMatch: { [constants.to]: req.query[constants.phoneNumber] } } }).then(function (transactions) {
         console.log(req.query[constants.phoneNumber]);
         if (transactions === null) {
             console.log('Could not find transaction');
@@ -242,32 +245,37 @@ router.get('/got', function (req, res, next) {
 
             var gots = [];
             var toSend = 0;
-            transactions.forEach(transaction => {
-                getEventByTransactionId(transaction[constants.transactionId])
-                    .then(event => {
-                        var givens = transaction[constants.given];
-                        var got = [];
-                        givens.forEach(given => {
-                            got.push({
-                                [constants.phoneNumber]: given[constants.to],
-                                [constants.from]: given[constants.phoneNumber],
-                                [constants.amount]: given[constants.amount]
+            if (transactions.length === 0) {
+                res.send([]);
+            } else {
+                transactions.forEach(transaction => {
+                    getEventByTransactionId(transaction[constants.transactionId])
+                        .then(event => {
+                            var givens = transaction[constants.given];
+                            var got = [];
+                            givens.forEach(given => {
+                                got.push({
+                                    [constants.phoneNumber]: given[constants.to],
+                                    [constants.from]: given[constants.phoneNumber],
+                                    [constants.amount]: given[constants.amount],
+                                    [constants.time]: given[constants.time],
+                                    [constants.paymentMode]: given[constants.paymentMode]
+                                });
+                            });
+                            gots.push({
+                                [constants.eventName]: event[constants.eventName],
+                                [constants.eventId]: event[constants.eventId],
+                                [constants.got]: got.filter(obj => obj[constants.phoneNumber] === req.query[constants.phoneNumber])
+
                             });
 
+                            toSend += 1;
+                            if (toSend === transactions.length) {
+                                send(res, gots);
+                            }
                         });
-                        gots.push({
-                            [constants.eventName]: event[constants.eventName],
-                            [constants.eventId]: event[constants.eventId],
-                            [constants.got]: got.filter(obj => obj[constants.phoneNumber] === req.query[constants.phoneNumber])
-
-                        });
-
-                        toSend += 1;
-                        if (toSend === transactions.length) {
-                            send(res, gots);
-                        }
-                    });
-            });
+                });
+            }
         }
     }).catch(next);
 });
