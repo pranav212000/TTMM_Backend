@@ -6,9 +6,15 @@ Schema = mongoose.Schema;
 
 OrderSchema = new Schema({
 
-    [constants.orderId]: { type: String, required: [true, 'Order id not specified'] , unique: true},
+    [constants.orderId]: { type: String, required: [true, 'Order id not specified'], unique: true },
     [constants.eventId]: { type: String, required: [true, 'Event Id is required'] },
-    [constants.phoneNumber]: { type: [String], default: []},
+    [constants.members]: {
+        type: [{
+            [constants.phoneNumber]: String,
+            [constants.quantity]: Number
+        }], default: []
+    },
+    [constants.creator]: { type: String, required: [true, 'Creator not specified'] },
     [constants.itemName]: { type: String, required: [true, 'Item name not specified'] },
     [constants.quantity]: { type: Number, required: [true, 'Quantity not specified'] },
     [constants.cost]: { type: Number, required: [true, 'Cost is not specified'] },

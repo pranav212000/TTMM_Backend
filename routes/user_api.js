@@ -70,11 +70,11 @@ router.get('/multiple', function (req, res, next) {
 })
 
 
-// Get user groups
+// Get user orders
 router.get('/orders', function (req, res, next) {
-    Order.find({ [constants.phoneNumber]: req.query.phoneNumber }).then(function (orders) {
+    Order.find({ 'members.phoneNumber': req.query.phoneNumber }).then(function (orders) {
         if (orders === null || orders.length === 0) {
-            res.send(orders);
+            res.send([]);
         } else {
             var getEventsForOrders = new Promise(function (resolve, reject) {
                 var body = [];

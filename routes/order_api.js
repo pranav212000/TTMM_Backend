@@ -115,7 +115,43 @@ router.put('/updateOrder', function (req, res, next) {
             }
 
         });
+});
 
+
+router.put('/updateQuantity', function (req, res, next) {
+
+    Order.findOne({ [constants.orderId]: req.query.order }).then(function (order) {
+        if (order === null) {
+            res.status(404).send({ isSuccess: false, message: 'Could not find the order' });
+        } else {
+            var members = order[constants.members];
+
+            var index = members.findIndex(obj => obj[constants.phoneNumber] === req.query.phoneNumber);
+
+            if (index !== -1) {
+                members[index] = {
+                    [constants.phoneNumber]: req.query.phoneNumber,
+                    [constants.quantity]: req.query.quantity
+                };
+            } else {
+                members.push({
+                    [constants.phoneNumber]: req.query.phoneNumber,
+                    [constants.quantity]: req.query.quantity
+                });
+            }
+
+            order[constants.members] = members;
+            order.markModified([constants.members]);
+            order.save(function (error) {
+                if (error) {
+                    console.log(error);
+                    res.status(500).send({ isSuccess: false, error: error });
+                } else {
+                    res.send(order);
+                }
+            });
+        }
+    });
 });
 
 

@@ -27,6 +27,8 @@ var constants = {
     quantity: 'quantity',
     cost: 'cost',
     totalCost: 'totalCost',
+    creator : 'creator',
+    members: 'members',
 
     transactionId: 'transactionId',
     split: 'split',

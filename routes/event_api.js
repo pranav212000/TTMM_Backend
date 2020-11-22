@@ -130,24 +130,37 @@ router.post('/:eventId/addOrder', function (req, res, next) {
 
             }).catch(next);
         } else {
-            order[constants.quantity] += req.body[constants.quantity];
-            order[constants.totalCost] += req.body[constants.totalCost];
-            var phoneNumbers = order[constants.phoneNumber];
-            order[constants.phoneNumber].push(phoneNumbers[0]);
-
-            order.markModified([constants.quantity]);
-            order.markModified([constants.totalCost]);
-            order.markModified([constants.phoneNumber]);
 
 
-            order.save(function (error) {
-                if (error) {
-                    console.log(error);
-                    res.status(500).send({ isSuccess: false, error: error });
-                } else {
-                    res.send({ 'order': order });
-                }
-            });
+            res.send({ message: 'Order already exists please edit existing order' });
+
+
+            // if(req.body[constants.phoneNumber] === order[constants.creator]) {
+            //     order[constants.quantity] += req.body[constants.quantity];
+            //     order[constants.totalCost] += req.body[constants.totalCost];
+
+            // } else {
+
+            // }
+
+            // order[constants.quantity] += req.body[constants.quantity];
+            // order[constants.totalCost] += req.body[constants.totalCost];
+            // var phoneNumbers = order[constants.phoneNumber];
+            // order[constants.phoneNumber].push(phoneNumbers[0]);
+
+            // order.markModified([constants.quantity]);
+            // order.markModified([constants.totalCost]);
+            // order.markModified([constants.phoneNumber]);
+
+
+            // order.save(function (error) {
+            //     if (error) {
+            //         console.log(error);
+            //         res.status(500).send({ isSuccess: false, error: error });
+            //     } else {
+            //         res.send({ 'order': order });
+            //     }
+            // });
         }
     })
 
@@ -283,7 +296,7 @@ function addToTransaction(event, order, isNew, res) {
                             transaction[constants.toGive] = toGive;
 
                         } else if (splitType === constants.byOrder) {    // TODO if more splits are to be added add here
-                            var members = order[constants.phoneNumber];
+                            var members = order[constants.members];
 
                             var toGive = transaction[constants.toGive];
                             var toGet = transaction[constants.toGet];
