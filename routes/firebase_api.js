@@ -31,9 +31,18 @@ router.post('/storeToken', function (req, res, next) {
         } else {
             if (token[constants.token] === req.body[constants.token])
                 res.send({ isSuccess: true, message: 'Token corresponding to the number already exists' });
-            else
-                res.status(405).send({ isSuccess: false, error: 'Wrong token for the number' });
-
+            else {
+                token[constants.token] = req.body[constants.token];
+                token.markModified([constants.token])
+                token.save(function (error) {
+                    if (error) {
+                        console.log(error);
+                        res.status(500).send({ isSuccess: false, error: error });
+                    } else {
+                        res.send(token);
+                    }
+                });
+            }
         }
     }).catch(next);
 })
