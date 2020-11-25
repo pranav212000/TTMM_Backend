@@ -7,8 +7,8 @@ const Group = require('../models/group');
 const Cash = require('../models/cash');
 const { eventId, totalPaid, phoneNumber, toGet, toGive } = require('../constants');
 const Transaction = require('../models/transaction');
-const getOrder = require('./order_api').getOrder;
-const getEventOrders = require('./event_api').getEventOrders;
+const splitByOrder = require('./split').splitByOrder;
+const splitEvenly = require('./split').splitEvenly;
 
 const router = express.Router();
 
@@ -298,78 +298,12 @@ function getEvent(eventId, callback) {
 }
 
 
+
+
+
 // ASSUMES total cost is correct maybe changed later
-router.post('/spiltEvenly', function (req, res, next) {
-    Group.findOne({ [constants.groupEvents]: req.query.eventId }).then(function (group) {
-        if (group === null) {
-            console.log('Could not find group');
-            res.status(404).send({ isSuccess: false, error: 'Could not find the group having event : ' + req.query.eventId });
-        } else {
-
-            Event.findOne({ [constants.eventId]: req.query.eventId }).then(function (event) {
-
-                if (event === null) {
-                    console.log('Could not find transaction');
-                    res.status(404).send({ isSuccess: false, error: 'Could not find the event event id : ' + req.query.eventId });
-                } else {
-                    var members = group[constants.groupMembers];
-                    // console.log(members);
-                    Transaction.findOne({ [constants.transactionId]: event[constants.transactionId] })
-                        .then((transaction) => {
-                            if (transaction === null) {
-                                console.log('Could not find transaction');
-                                res.status(404).send({ isSuccess: false, error: 'Could not find the transaction' });
-                            }
-                            var totalCost = transaction[constants.totalCost];
-                            var paid = transaction[constants.paid];
-                            var sharePerMember = totalCost / members.length;
-                            var toGive = [];
-                            var toGet = [];
-                            members.forEach(member => {
-                                var result = paid.find(obj => {
-                                    return obj[constants.phoneNumber] === member;
-                                });
-                                var paidAmount;
-                                if (result === undefined) {
-                                    paidAmount = 0;
-                                } else {
-                                    paidAmount = result[constants.amount];
-                                }
-                                // console.log(paidAmount);
-                                if (paidAmount < sharePerMember)
-                                    toGive.push({ [constants.phoneNumber]: member, [constants.amount]: sharePerMember - paidAmount });
-                                else if (paidAmount > sharePerMember)
-                                    toGet.push({ [constants.phoneNumber]: member, [constants.amount]: paidAmount - sharePerMember });
-
-
-                            });
-
-
-                            transaction[constants.toGive] = toGive;
-                            transaction[constants.toGet] = toGet;
-                            transaction[constants.split] = constants.evenly;
-
-                            transaction.markModified([constants.toGive]);
-                            transaction.markModified([constants.toGet]);
-                            transaction.markModified([constants.split]);
-
-                            transaction.save(function (error) {
-                                if (error) {
-                                    console.log(error);
-                                    res.status(500).send({ isSuccess: false, error: error });
-                                } else {
-                                    res.send(transaction);
-                                }
-                            });
-                        });
-                }
-            });
-
-
-
-        }
-    }).catch(next);
-
+router.post('/splitEvenly', function (req, res, next) {
+    splitEvenly(req.query.eventId, res, next, true);
 });
 
 
@@ -377,118 +311,14 @@ router.post('/spiltEvenly', function (req, res, next) {
 // TODO SPLIT BY QUANTITY one orders one roti
 //! Therse split apis are kept so that in case user change the split mode to even to byorder these can be called.
 router.post('/splitByOrder', function (req, res, next) {
-    getEventOrders(req.query.eventId, function (result) {
-        // console.log(result);
-        if (!result.isSuccess) {
-            res.status(500).send(result.error);
-        } else {
-            var orders = result.response;
-            var members = [];
-
-            var transTotal = 0;
-            orders.forEach(order => {
-                var orderMembers = order[constants.members];
-
-                var totalCost = order[constants.totalCost];
-                transTotal += totalCost;
-                // var sharePerMember = totalCost / orderMembers.length;
-
-                orderMembers.forEach(orderMember => {
-                    var index = members.findIndex(member => member[constants.phoneNumber] === orderMember[constants.phoneNumber]);
-
-
-                    var isPresent = index !== -1;
-
-                    if (isPresent) {
-                        members[index][constants.amount] += (orderMember[constants.quantity] * order[constants.cost]);
-                    } else {
-                        members.push({ [constants.phoneNumber]: orderMember[constants.phoneNumber], [constants.amount]: (orderMember[constants.quantity] * order[constants.cost]) });
-                    }
-
-                });
-
-            });
-
-            Event.findOne({ [constants.eventId]: req.query.eventId }).then(function (event) {
-                if (event === null) {
-                    console.log('Could not find event with eventId : ' + req.query.eventId);
-                    res.send({ isSuccess: false, error: 'Could not find event with eventId : ' + req.query.eventId });
-                } else {
-
-                    Transaction.findOne({ [constants.transactionId]: event[constants.transactionId] }).then(function (transaction) {
-
-                        if (transaction === null) {
-                            console.log('Could not find the transaction');
-                            res.status(404).send({ isSuccess: false, error: 'Could not find the transaction' });
-
-                        } else {
-
-                            transaction[constants.totalCost] = transTotal;
-                            var paid = transaction[constants.paid];
-                            var toGet = [];
-                            var toGive = [];
-
-                            members.forEach(member => {
-
-                                var result = paid.find(obj => {
-                                    return obj[constants.phoneNumber] === member[constants.phoneNumber];
-                                });
-                                var paidAmount;
-                                if (result === undefined) {
-                                    paidAmount = 0;
-                                } else {
-                                    paidAmount = result[constants.amount];
-                                }
-                                if (paidAmount < member[constants.amount]) {
-                                    toGive.push({
-                                        [constants.phoneNumber]: member[constants.phoneNumber],
-                                        [constants.amount]: member[constants.amount] - paidAmount
-                                    });
-                                }
-                                else if (paidAmount > member[constants.amount]) {
-                                    toGet.push({
-                                        [constants.phoneNumber]: member[constants.phoneNumber],
-                                        [constants.amount]: paidAmount - member[constants.amount]
-                                    });
-                                }
-
-                            });
-
-
-                            transaction[constants.toGive] = toGive;
-                            transaction[constants.toGet] = toGet;
-                            transaction[constants.split] = constants.byOrder;
-
-
-                            transaction.markModified([constants.totalCost]);
-                            transaction.markModified([constants.toGive]);
-                            transaction.markModified([constants.toGet]);
-                            transaction.markModified([constants.split]);
-
-                            transaction.save(function (error) {
-                                if (error) {
-                                    console.log(error);
-                                    res.status(500).send({ isSuccess: false, error: error });
-                                } else {
-                                    res.send(transaction);
-                                }
-                            })
-
-                        }
-
-
-                    });
-
-                }
-            }).catch(next);
-
-
-        }
-    })
+    splitByOrder(req.query.eventId, res, next, true);
 });
 
 
 
 
 
-module.exports = router;
+module.exports = {
+    router: router,
+    splitEvenly: splitEvenly,
+};

@@ -5,8 +5,9 @@ const User = require('../models/user');
 const { model } = require('mongoose');
 const Group = require('../models/group');
 const { eventId, toGet, split, amount, totalCost, phoneNumber } = require('../constants');
-const getOrder = require('./order_api').getOrder;
+const getOrder = require('./split').getOrder;
 const Transaction = require('../models/transaction');
+const getEventOrders = require('./split').getEventOrders;
 const router = express.Router();
 
 
@@ -415,37 +416,10 @@ router.get('/:eventId/orders', function (req, res, next) {
 });
 
 
-getEventOrders = function (eventId, callback) {
-    Event.findOne({ [constants.eventId]: eventId }, function (error, event) {
-        if (error) {
-            console.error(error);
-            callback({ isSuccess: false, error: error, status: 500 });
-        } else {
-            if (event === null) {
-                callback({
-                    isSuccess: false,
-                    error: 'Could not find event with event id : ' + eventId,
-                    status: 404
-                });
-            }
-            else {
-                var orders = event[constants.orders];
-
-                Promise.all(orders.map(getOrder))
-                    .then(response => {
-                        callback({ isSuccess: true, response: response });
-                    })
-                    .catch(error => {
-                        callback({ isSuccess: false, error: error });
-                    });
-            }
-        }
-    });
-};
 
 
 module.exports = {
-    router: router, getEventOrders: getEventOrders,
+    router: router, 
     getEvent: getEvent,
     getEventByTransactionId: getEventByTransactionId,
     getEventByOrder: getEventByOrder

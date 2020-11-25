@@ -3,27 +3,14 @@ const Group = require('../models/group');
 const constants = require('../constants');
 const User = require('../models/user');
 const Order = require('../models/order');
-const { itemName, eventId, orderId } = require('../constants');
+const { itemName, eventId, orderId, transactionId } = require('../constants');
 const e = require('express');
+const splitByOrder = require('./split').splitByOrder;
+const splitEvenly = require('./split').splitEvenly;
+const Transaction = require('../models/transaction');
 const router = express.Router();
 
-var getOrder = function (orderId) {
-    return new Promise(function (resolve, reject) {
-        Order.findOne({ [constants.orderId]: orderId }, function (error, order) {
-            if (error) {
-                console.log(error);
-                reject(error);
-            } else {
-                if (order === null)
-                    reject('COULD NOT FIND ORDER');
-                else {
-                    console.log(order);
-                    resolve(order);
-                }
-            }
-        });
-    });
-}
+// ?getOrder() moved to split.js
 
 
 router.get('/', function (req, res, next) {
@@ -95,6 +82,7 @@ router.delete('/deleteOrder', function (req, res, next) {
     // );
 });
 
+
 // Edit the order
 router.put('/updateOrder', function (req, res, next) {
 
@@ -111,11 +99,25 @@ router.put('/updateOrder', function (req, res, next) {
                     res.status(404).send({ message: 'Could not find order' });
                 } else {
                     res.send(order);
+                    // Event.findOne({ [constants.eventId]: order[constants.eventId] }).then(function (event) {
+                    //     if (event !== null) {
+                    //         Transaction.findOne({ [constants.transactionId]: event[constants.transactionId] }).then(function (transaction) {
+                    //             if (transaction !== null) {
+                    //                 if (transaction[constants.split] === constants.byOrder) {
+                    //                     splitByOrder(event[constants.eventId], res, next, false);
+                    //                 } else {
+                    //                     splitEvenly(event[constants.eventId], res, next, false);
+                    //                 }
+                    //             }
+                    //         })
+                    //     }
+                    // });
                 }
             }
 
         });
 });
+
 
 
 router.put('/updateQuantity', function (req, res, next) {
@@ -160,5 +162,4 @@ router.put('/updateQuantity', function (req, res, next) {
 
 module.exports = {
     router: router,
-    getOrder: getOrder
 };

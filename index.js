@@ -40,7 +40,7 @@ app.use('/api/user', require('./routes/user_api'));
 app.use('/api/group', require('./routes/group_api'));
 app.use('/api/event', require('./routes/event_api').router);
 app.use('/api/order', require('./routes/order_api').router);
-app.use('/api/transaction', require('./routes/transaction_api'));
+app.use('/api/transaction', require('./routes/transaction_api').router);
 app.use('/api/firebase', require('./routes/firebase_api'));
 
 app.get('/', function (req, res) {
