@@ -57,7 +57,7 @@ var getEventOrders = function (eventId, callback) {
 };
 
 
-var splitByOrder = function (eventId, res, next, sendResponse) {
+var splitByOrder = function (eventId, res, sendResponse) {
     getEventOrders(eventId, function (result) {
         // console.log(result);
         if (!result.isSuccess) {
@@ -141,7 +141,7 @@ var splitByOrder = function (eventId, res, next, sendResponse) {
 
 
 
-var splitEvenly = function (eventId, res, next, sendResponse) {
+var splitEvenly = function (eventId, res, sendResponse) {
 
     Group.findOne({ [constants.groupEvents]: eventId }).then(function (group) {
         if (group === null) {

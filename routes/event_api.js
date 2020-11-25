@@ -8,6 +8,8 @@ const { eventId, toGet, split, amount, totalCost, phoneNumber } = require('../co
 const getOrder = require('./split').getOrder;
 const Transaction = require('../models/transaction');
 const getEventOrders = require('./split').getEventOrders;
+const splitByOrder = require('./split').splitByOrder;
+const splitEvenly = require('./split').splitEvenly;
 const router = express.Router();
 
 
@@ -247,109 +249,126 @@ function addOrderToEvent(order, eventId, res) {
 
 
 function addToTransaction(event, order, isNew, res) {
+    
+    Transaction.findOne({ [constants.transactionId]: event[constants.transactionId] }).then(function (transaction) {
 
-    Group.findOne({ [constants.groupEvents]: event[constants.eventId] }).then(function (group) {
-        if (group === null) {
-            console.log('Could not find group having event : ' + event[constants.eventId]);
-            res.status(404).send({ isSuccess: false, error: 'Could not find the group having event : ' + event[constants.eventId] });
+        if (transaction === null) {
+            res.status(404).send({ isSuccess: false, error: "Could not find the transaction with id : " + event[constants.transactionId] });
         } else {
-
-            Transaction.findOne({ [constants.transactionId]: event[constants.transactionId] })
-                .then(function (transaction) {
-                    if (transaction === null) {
-                        console.log('Could not find transaction with id: ' + event[constants.transactionId]);
-                        res.status(404).send({ isSuccess: false, error: 'Could not find transaction with id: ' + event[constants.transactionId] })
-                    } else {
-                        var members = group[constants.groupMembers];
-
-                        transaction[totalCost] += order[constants.totalCost];
-
-                        var splitType = transaction[constants.split];
-
-                        if (splitType === constants.evenly) {
-                            var toGive = transaction[constants.toGive];
-                            var toGet = transaction[constants.toGet];
-                            var splitPerMember = order[constants.totalCost] / members.length;
-                            members.forEach(member => {
-                                var index = toGive.findIndex(obj => obj[constants.phoneNumber] === member);
-                                if (index !== -1) {
-                                    toGive[index][constants.amount] += splitPerMember;
-                                } else {
-                                    var index1 = toGet.findIndex(obj => obj[constants.phoneNumber] === member);
-                                    if (index1 !== -1) {
-                                        if (toGet[index1][constants.amount] > splitPerMember) {
-                                            toGet[index1][constants.amount] -= splitPerMember;
-                                        } else if (toGet[index1][constants.amount] < splitPerMember) {
-                                            var temp = toGet[index1];
-                                            toGet.splice(index1, 1);
-                                            temp[constants.amount] = splitPerMember - temp[constants.amount];
-                                            toGive.push(temp);
-                                        } else {
-                                            toGet.splice(index1, 1);
-                                        }
-                                    } else {
-                                        toGive.push({ [constants.phoneNumber]: member, [constants.amount]: splitPerMember });
-                                    }
-                                }
-                            });
-
-                            transaction[constants.toGet] = toGet;
-                            transaction[constants.toGive] = toGive;
-
-                        } else if (splitType === constants.byOrder) {    // TODO if more splits are to be added add here
-                            var members = order[constants.members];
-
-                            var toGive = transaction[constants.toGive];
-                            var toGet = transaction[constants.toGet];
-
-                            var splitPerMember = order[constants.totalCost] / members.length;
-
-                            members.forEach(member => {
-                                var index = toGive.findIndex(obj => obj[constants.phoneNumber] === member);
-                                if (index !== -1) {
-                                    toGive[index][constants.amount] += splitPerMember;
-                                } else {
-                                    var index2 = toGet.findIndex(obj => obj[constants.phoneNumber] === member);
-
-                                    if (index2 !== -1) {
-                                        if (toGet[index2][constants.amount] > splitPerMember) {
-                                            toGet[index2][constants.amount] -= splitPerMember;
-                                        } else if (toGet[index2][constants.amount] < splitPerMember) {
-                                            var remainingAmount = splitPerMember - toGet[index2][constants.amount];
-                                            toGet.splice(index2, 1);
-                                            toGive.push({ [constants.phoneNumber]: member, [constants.amount]: remainingAmount });
-                                        } else {
-                                            toGive.push({ [constants.phoneNumber]: member, [constants.amount]: splitPerMember });
-                                        }
-                                    } else {
-                                        toGive.push({ [constants.phoneNumber]: member, [constants.amount]: splitPerMember });
-                                    }
-                                }
-
-                            });
-                            transaction[constants.toGet] = toGet;
-                            transaction[constants.toGive] = toGive;
-                        }
-                    }
-
-
-                    transaction.markModified([constants.totalCost]);
-                    transaction.markModified([constants.toGet]);
-                    transaction.markModified([constants.toGive]);
-
-
-                    transaction.save(function (error) {
-                        if (error) {
-                            console.log(error);
-                            res.status(500).send({ isSuccess: false, error: error });
-                        } else {
-                            // TODO remove transaciton from following line and jsut send the order
-                            res.send({ order: order, transaction: transaction });
-                        }
-                    })
-                });
+            res.send({ [constants.order]: order });
+            if (transaction[constants.split] === constants.byOrder) {
+                splitByOrder(event[constants.eventId], res, false);
+            } else {
+                splitEvenly(event[constants.eventId], res, false);
+            }
         }
-    })
+    });
+
+
+
+
+    // Group.findOne({ [constants.groupEvents]: event[constants.eventId] }).then(function (group) {
+    //     if (group === null) {
+    //         console.log('Could not find group having event : ' + event[constants.eventId]);
+    //         res.status(404).send({ isSuccess: false, error: 'Could not find the group having event : ' + event[constants.eventId] });
+    //     } else {
+
+    //         Transaction.findOne({ [constants.transactionId]: event[constants.transactionId] })
+    //             .then(function (transaction) {
+    //                 if (transaction === null) {
+    //                     console.log('Could not find transaction with id: ' + event[constants.transactionId]);
+    //                     res.status(404).send({ isSuccess: false, error: 'Could not find transaction with id: ' + event[constants.transactionId] })
+    //                 } else {
+    //                     var members = group[constants.groupMembers];
+
+    //                     transaction[totalCost] += order[constants.totalCost];
+
+    //                     var splitType = transaction[constants.split];
+
+    //                     if (splitType === constants.evenly) {
+    //                         var toGive = transaction[constants.toGive];
+    //                         var toGet = transaction[constants.toGet];
+    //                         var splitPerMember = order[constants.totalCost] / members.length;
+    //                         members.forEach(member => {
+    //                             var index = toGive.findIndex(obj => obj[constants.phoneNumber] === member);
+    //                             if (index !== -1) {
+    //                                 toGive[index][constants.amount] += splitPerMember;
+    //                             } else {
+    //                                 var index1 = toGet.findIndex(obj => obj[constants.phoneNumber] === member);
+    //                                 if (index1 !== -1) {
+    //                                     if (toGet[index1][constants.amount] > splitPerMember) {
+    //                                         toGet[index1][constants.amount] -= splitPerMember;
+    //                                     } else if (toGet[index1][constants.amount] < splitPerMember) {
+    //                                         var temp = toGet[index1];
+    //                                         toGet.splice(index1, 1);
+    //                                         temp[constants.amount] = splitPerMember - temp[constants.amount];
+    //                                         toGive.push(temp);
+    //                                     } else {
+    //                                         toGet.splice(index1, 1);
+    //                                     }
+    //                                 } else {
+    //                                     toGive.push({ [constants.phoneNumber]: member, [constants.amount]: splitPerMember });
+    //                                 }
+    //                             }
+    //                         });
+
+    //                         transaction[constants.toGet] = toGet;
+    //                         transaction[constants.toGive] = toGive;
+
+    //                     } else if (splitType === constants.byOrder) {    // TODO if more splits are to be added add here
+    //                         var members = order[constants.members];
+
+    //                         var toGive = transaction[constants.toGive];
+    //                         var toGet = transaction[constants.toGet];
+
+    //                         var splitPerMember = order[constants.totalCost] / members.length;
+
+    //                         members.forEach(member => {
+    //                             var index = toGive.findIndex(obj => obj[constants.phoneNumber] === member);
+    //                             if (index !== -1) {
+    //                                 toGive[index][constants.amount] += splitPerMember;
+    //                             } else {
+    //                                 var index2 = toGet.findIndex(obj => obj[constants.phoneNumber] === member);
+
+    //                                 if (index2 !== -1) {
+    //                                     if (toGet[index2][constants.amount] > splitPerMember) {
+    //                                         toGet[index2][constants.amount] -= splitPerMember;
+    //                                     } else if (toGet[index2][constants.amount] < splitPerMember) {
+    //                                         var remainingAmount = splitPerMember - toGet[index2][constants.amount];
+    //                                         toGet.splice(index2, 1);
+    //                                         toGive.push({ [constants.phoneNumber]: member, [constants.amount]: remainingAmount });
+    //                                     } else {
+    //                                         toGive.push({ [constants.phoneNumber]: member, [constants.amount]: splitPerMember });
+    //                                     }
+    //                                 } else {
+    //                                     toGive.push({ [constants.phoneNumber]: member, [constants.amount]: splitPerMember });
+    //                                 }
+    //                             }
+
+    //                         });
+    //                         transaction[constants.toGet] = toGet;
+    //                         transaction[constants.toGive] = toGive;
+    //                     }
+    //                 }
+
+
+    //                 transaction.markModified([constants.totalCost]);
+    //                 transaction.markModified([constants.toGet]);
+    //                 transaction.markModified([constants.toGive]);
+
+
+    //                 transaction.save(function (error) {
+    //                     if (error) {
+    //                         console.log(error);
+    //                         res.status(500).send({ isSuccess: false, error: error });
+    //                     } else {
+    //                         // TODO remove transaciton from following line and jsut send the order
+    //                         res.send({ order: order, transaction: transaction });
+    //                     }
+    //                 })
+    //             });
+    //     }
+    // })
 
     // Transaction.findOne({ [constants.transactionId]: event[constants.transactionId] })
     //     .then(function (transaction) {
@@ -419,7 +438,7 @@ router.get('/:eventId/orders', function (req, res, next) {
 
 
 module.exports = {
-    router: router, 
+    router: router,
     getEvent: getEvent,
     getEventByTransactionId: getEventByTransactionId,
     getEventByOrder: getEventByOrder

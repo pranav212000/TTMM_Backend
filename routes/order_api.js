@@ -59,6 +59,16 @@ router.delete('/deleteOrder', function (req, res, next) {
                                             res.send({ isSuccess: false, message: err });
                                         } else {
                                             res.send({ isSuccess: true, message: 'Success' });
+
+                                            Transaction.findOne({ [constants.transactionId]: event[constants.transactionId] }).then(function (transaction) {
+                                                if (transaction !== null) {
+                                                    if (transaction[constants.split] === constants.byOrder) {
+                                                        splitByOrder(event[constants.eventId], res, false);
+                                                    } else {
+                                                        splitEvenly(event[constants.eventId], res, false);
+                                                    }
+                                                }
+                                            });
                                         }
                                     }
                                 )
@@ -99,19 +109,19 @@ router.put('/updateOrder', function (req, res, next) {
                     res.status(404).send({ message: 'Could not find order' });
                 } else {
                     res.send(order);
-                    // Event.findOne({ [constants.eventId]: order[constants.eventId] }).then(function (event) {
-                    //     if (event !== null) {
-                    //         Transaction.findOne({ [constants.transactionId]: event[constants.transactionId] }).then(function (transaction) {
-                    //             if (transaction !== null) {
-                    //                 if (transaction[constants.split] === constants.byOrder) {
-                    //                     splitByOrder(event[constants.eventId], res, next, false);
-                    //                 } else {
-                    //                     splitEvenly(event[constants.eventId], res, next, false);
-                    //                 }
-                    //             }
-                    //         })
-                    //     }
-                    // });
+                    Event.findOne({ [constants.eventId]: order[constants.eventId] }).then(function (event) {
+                        if (event !== null) {
+                            Transaction.findOne({ [constants.transactionId]: event[constants.transactionId] }).then(function (transaction) {
+                                if (transaction !== null) {
+                                    if (transaction[constants.split] === constants.byOrder) {
+                                        splitByOrder(event[constants.eventId], res, false);
+                                    } else {
+                                        splitEvenly(event[constants.eventId], res, false);
+                                    }
+                                }
+                            })
+                        }
+                    });
                 }
             }
 
