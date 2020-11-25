@@ -12,6 +12,28 @@ const splitEvenly = require('./split').splitEvenly;
 
 const router = express.Router();
 
+
+router.get('/', function (req, res, next) {
+
+    Event.findOne({ [constants.eventId]: req.query.eventId }).then(function (event) {
+        if (event === null) {
+            res.status(404).send({ isSuccess: false, error: 'Could not find the event : ' + req.query.eventId });
+        } else {
+            Transaction.findOne({ [constants.transactionId]: event[constants.transactionId] }).then(function (transaction) {
+                if (transaction === null) {
+                    res.status(404).send({ isSuccess: false, error: 'Could not find the transaction: ' + event[constants.transactionId] });
+                } else {
+                    res.send(transaction);
+                }
+            });
+        }
+    });
+});
+
+
+
+
+
 // Get toGet of a transaction
 router.get('/allToGets', function (req, res, next) {
     var eventId = req.query.eventId;
